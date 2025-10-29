@@ -20,7 +20,7 @@ end
 PRIVATE_KEY = ENV.fetch("X402_PRIVATE_KEY")
 DEFAULT_PAY_TO = ENV.fetch("X402_PAY_TO")
 CHAIN = ENV.fetch("X402_CHAIN", "base-sepolia")
-RESOURCE_URL = "http://localhost:3000/api/weather/current"
+RESOURCE_URL = "http://localhost:3000/api/weather/paywalled_info"
 
 # Configure the gem
 X402::Payments.configure do |config|
@@ -55,6 +55,3 @@ puts link[:payment_header]
 puts
 puts "Curl Command:"
 puts link[:curl_command]
-puts
-puts "To test the payment, run:"
-puts "  #{link[:curl_command]}"

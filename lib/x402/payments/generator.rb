@@ -94,7 +94,7 @@ module X402
 
         {
           payment_header: header,
-          curl_command: "curl -i -H \"X-PAYMENT: #{header}\" #{resource}"
+          curl_command: "curl -s -H \"X-PAYMENT: #{header}\" #{resource} | jq ."
         }
       end
 

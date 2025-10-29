@@ -80,6 +80,7 @@ PLATFORMS
   arm64-darwin
 
 DEPENDENCIES
+  eth (~> 0.5.15)
   irb
   rake (~> 13.0)
   rspec (~> 3.0)
