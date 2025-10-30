@@ -1,4 +1,4 @@
-# frozen_string_literal: true
+$# frozen_string_literal: true
 
 require_relative "lib/x402/payments/version"
 
