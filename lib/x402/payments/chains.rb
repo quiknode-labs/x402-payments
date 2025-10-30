@@ -6,29 +6,30 @@ module X402
     CHAINS = {
       "base-sepolia" => {
         chain_id: 84532,
-        rpc_url: "https://sepolia.base.org",
+        rpc_url: "https://clean-snowy-hexagon.base-sepolia.quiknode.pro",
         usdc_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         explorer_url: "https://sepolia.basescan.org"
       },
       "base" => {
         chain_id: 8453,
-        rpc_url: "https://mainnet.base.org",
+        rpc_url: "https://snowy-compatible-ensemble.base-mainnet.quiknode.pro",
         usdc_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         explorer_url: "https://basescan.org"
       },
       "avalanche-fuji" => {
         chain_id: 43113,
-        rpc_url: "https://api.avax-test.network/ext/bc/C/rpc",
+        rpc_url: "https://muddy-sly-field.avalanche-testnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0x5425890298aed601595a70AB815c96711a31Bc65",
         explorer_url: "https://testnet.snowtrace.io"
       },
       "avalanche" => {
         chain_id: 43114,
-        rpc_url: "https://api.avax.network/ext/bc/C/rpc",
+        rpc_url: "https://floral-patient-panorama.avalanche-mainnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
         explorer_url: "https://snowtrace.io"
       }
     }.freeze
+    
 
     # Currency configurations by chain
     CURRENCY_BY_CHAIN = {
