@@ -6,7 +6,7 @@ RSpec.describe X402::Payments do
       config = X402::Payments.chain_config("base-sepolia")
       expect(config[:chain_id]).to eq(84532)
       expect(config[:usdc_address]).to eq("0x036CbD53842c5426634e7929541eC2318f3dCF7e")
-      expect(config[:rpc_url]).to eq("https://sepolia.base.org")
+      expect(config[:rpc_url]).to eq("https://clean-snowy-hexagon.base-sepolia.quiknode.pro")
       expect(config[:explorer_url]).to eq("https://sepolia.basescan.org")
     end
 
