@@ -6,7 +6,7 @@ Gem::Specification.new do |spec|
   spec.name = "x402-payments"
   spec.version = X402::Payments::VERSION
   spec.authors = ["QuickNode"]
-  spec.email = ["zach@quiknode.io"]
+  spec.email = ["zach+402@quiknode.io"]
 
   spec.summary = "Generate x402 payment signatures and links for blockchain micropayments"
   spec.description = "Ruby gem for generating signed payment headers and links using the x402 protocol. Supports USDC payments on Base and other EVM networks with EIP-712 signing."
