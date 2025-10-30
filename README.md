@@ -60,6 +60,12 @@ export X402_PRIVATE_KEY="0xYourPrivateKey"        # Private key for signing
 # Optional (with defaults shown)
 export X402_CHAIN="base-sepolia"                  # Network to use
 export X402_MAX_TIMEOUT_SECONDS="600"             # Payment validity timeout
+
+# Optional: Custom RPC URLs (override default RPC endpoints)
+export X402_BASE_RPC_URL="https://your-custom-rpc.com"
+export X402_BASE_SEPOLIA_RPC_URL="https://your-sepolia-rpc.com"
+export X402_AVALANCHE_RPC_URL="https://your-avax-rpc.com"
+export X402_AVALANCHE_FUJI_RPC_URL="https://your-avax-testnet-rpc.com"
 ```
 
 ### Supported Networks
@@ -100,6 +106,12 @@ X402::Payments.configure do |config|
   config.default_pay_to = ENV['X402_PAY_TO']
   config.private_key = ENV['X402_PRIVATE_KEY']
   config.chain = Rails.env.production? ? 'base' : 'base-sepolia'
+
+  # Optional: Override RPC URLs programmatically
+  # config.rpc_urls = {
+  #   'base' => 'https://your-custom-base-rpc.com',
+  #   'base-sepolia' => 'https://your-sepolia-rpc.com'
+  # }
 end
 
 # In your controller or service
@@ -125,6 +137,7 @@ X402::Payments.configure do |config|
   config.default_pay_to = "0xYourDefaultRecipient"
   config.private_key = "0xYourPrivateKeyHere"
   config.chain = "base-sepolia"
+  # config.rpc_urls = { 'base-sepolia' => 'https://your-custom-rpc.com' }
 end
 
 # Generate payment

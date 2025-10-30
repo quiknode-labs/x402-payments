@@ -82,6 +82,22 @@ module X402
       def currency_decimals_for_chain(chain_name)
         currency_config_for_chain(chain_name)[:decimals]
       end
+
+      def rpc_url_for(chain_name)
+        # Priority: 1) Programmatic config, 2) ENV variable, 3) Default from CHAINS
+        config = X402::Payments.configuration
+
+        # Check programmatic configuration
+        return config.rpc_urls[chain_name] if config.rpc_urls[chain_name]
+
+        # Check environment variable
+        env_var_name = "X402_#{chain_name.upcase.gsub('-', '_')}_RPC_URL"
+        env_rpc = ENV[env_var_name]
+        return env_rpc if env_rpc && !env_rpc.empty?
+
+        # Fall back to default
+        chain_config(chain_name)[:rpc_url]
+      end
     end
   end
 end

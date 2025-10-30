@@ -3,13 +3,14 @@
 module X402
   module Payments
     class Configuration
-      attr_accessor :default_pay_to, :private_key, :chain, :max_timeout_seconds
+      attr_accessor :default_pay_to, :private_key, :chain, :max_timeout_seconds, :rpc_urls
 
       def initialize
         @default_pay_to = ENV.fetch("X402_PAY_TO", nil)
         @private_key = ENV.fetch("X402_PRIVATE_KEY", nil)
         @chain = ENV.fetch("X402_CHAIN", "base-sepolia")
         @max_timeout_seconds = ENV.fetch("X402_MAX_TIMEOUT_SECONDS", "600").to_i
+        @rpc_urls = {}
       end
 
       def validate!
