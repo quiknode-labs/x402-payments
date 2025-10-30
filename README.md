@@ -2,7 +2,9 @@
 
 ![Coverage](./coverage/coverage.svg)
 
-Ruby gem for generating signed payment headers and links using the x402 protocol. Supports USDC payments on Base, Avalanche, and other EVM networks with EIP-712 signing.
+Ruby gem for generating signed payment HTTP headers and links using the [x402 protocol](https://www.x402.org/).
+
+Supports USDC payments on Base, Avalanche, and other EVM networks with EIP-712 signing.
 
 ## Installation
 
@@ -155,6 +157,8 @@ header = X402::Payments.generate_header(
 
 puts "Payment Header:"
 puts header
+
+HTTParty.get("http://localhost:3000/api/data", headers: { "X-PAYMENT" => header })
 ```
 
 ## How It Works
