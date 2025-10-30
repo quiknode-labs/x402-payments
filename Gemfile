@@ -11,3 +11,8 @@ gem "rake", "~> 13.0"
 gem "rspec", "~> 3.0"
 
 gem "eth", "~> 0.5.15"
+
+group :development, :test do
+  gem 'simplecov', require: false
+  gem 'simplecov-formatter-badge', require: false
+end

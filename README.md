@@ -1,5 +1,7 @@
 # X402::Payments
 
+![Coverage](./coverage/coverage.svg)
+
 Ruby gem for generating signed payment headers and links using the x402 protocol. Supports USDC payments on Base, Avalanche, and other EVM networks with EIP-712 signing.
 
 ## Installation
@@ -88,45 +90,6 @@ header = X402::Payments.generate_header(
 
 **Note**: The `pay_to` parameter allows you to specify a different recipient wallet address per payment. If not provided, it uses the configured `default_pay_to`.
 
-### Generate Payment Link
-
-```ruby
-# Generate payment header with curl command
-link = X402::Payments.generate_link(
-  amount: 0.001,
-  resource: "http://localhost:3000/api/weather",
-  description: "Weather API access"
-)
-
-puts link[:payment_header]  # Base64-encoded payment header
-puts link[:curl_command]     # Ready-to-use curl command
-```
-
-### Advanced Configuration
-
-```ruby
-# Configure programmatically
-X402::Payments.configure do |config|
-  config.default_pay_to = "0xYourDefaultRecipient"  # Default payment recipient
-  config.private_key = "0xYourKey"
-  config.chain = "base"  # Use mainnet
-  config.max_timeout_seconds = 300
-end
-
-# Override configuration per request
-header = X402::Payments.generate_header(
-  amount: 0.005,
-  resource: "https://api.example.com/data",
-  network: "avalanche",                    # Override default network
-  private_key: "0xDifferentKey",          # Override default key
-  pay_to: "0xRecipientWalletAddress",     # Override recipient address
-  extra: {                                 # Override EIP-712 domain
-    name: "Custom Token",
-    version: "1"
-  }
-)
-```
-
 ### Using in Rails
 
 The gem works seamlessly in Rails applications:
@@ -167,7 +130,14 @@ end
 # Generate payment
 header = X402::Payments.generate_header(
   amount: 0.001,
-  resource: "http://localhost:3000/api/data"
+  resource: "http://localhost:3000/api/data",
+  # network: "avalanche",                    # Override default network
+  # private_key: "0xDifferentKey",          # Override default key
+  # pay_to: "0xRecipientWalletAddress",     # Override recipient address
+  # extra: {                                 # Override EIP-712 domain
+  #   name: "Custom Token",
+  #   version: "1"
+  # }
 )
 
 puts "Payment Header:"
@@ -199,53 +169,6 @@ ruby examples/generate_payment.rb
 
 This will generate a signed payment header and provide a ready-to-use curl command for testing. See `examples/README.md` for more details.
 
-## Troubleshooting
-
-### Native Extension Build Failures
-
-If you encounter errors installing the `rbsecp256k1` native extension:
-
-**Error: `bad interpreter: /usr/bin/perl5.30: No such file or directory`**
-
-This happens when autoreconf has a hardcoded perl version that doesn't match your system. Fix options:
-
-1. Create a symlink to your current perl (macOS):
-   ```bash
-   # Find your perl location
-   which perl
-   # Create symlink (requires admin password)
-   sudo ln -sf /opt/homebrew/bin/perl /usr/bin/perl5.30
-   ```
-
-2. Reinstall autoconf to get the correct perl path:
-   ```bash
-   brew reinstall autoconf
-   ```
-
-3. Use system libsecp256k1 if available:
-   ```bash
-   gem install rbsecp256k1 -- --with-system-libraries
-   bundle install
-   ```
-
-4. Ensure Xcode Command Line Tools are installed (macOS):
-   ```bash
-   xcode-select --install
-   ```
-
-After fixing the perl issue, run `bundle install` again.
-
-### Configuration Errors
-
-**Error: `default_pay_to is required`**
-- Set `X402_PAY_TO` environment variable or configure programmatically
-
-**Error: `private_key is required`**
-- Set `X402_PRIVATE_KEY` environment variable or configure programmatically
-
-**Error: `Unsupported chain: xyz`**
-- Use one of the supported networks: `base-sepolia`, `base`, `avalanche-fuji`, or `avalanche`
-
 ## Development
 
 After checking out the repo, run:
@@ -260,6 +183,16 @@ bin/console      # Interactive prompt for experimentation
 
 Bug reports and pull requests are welcome on GitHub at https://github.com/yourusername/x402-payments.
 
+## Requirements
+
+- Ruby 3.0+
+
+## Resources
+
+- [x402 Protocol Docs](https://docs.cdp.coinbase.com/x402)
+- [GitHub Repository](https://github.com/coinbase/x402)
+- [Facilitator API](https://x402.org/facilitator)
+
 ## License
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+MIT License. See [LICENSE.txt](LICENSE.txt).
