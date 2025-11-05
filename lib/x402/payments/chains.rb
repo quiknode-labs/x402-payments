@@ -27,6 +27,18 @@ module X402
         rpc_url: "https://floral-patient-panorama.avalanche-mainnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
         explorer_url: "https://snowtrace.io"
+      },
+      "solana-devnet" => {
+        chain_id: 103,
+        rpc_url: "https://bitter-twilight-vineyard.solana-devnet.quiknode.pro/",
+        usdc_address: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+        explorer_url: "https://explorer.solana.com"
+      },
+      "solana" => {
+        chain_id: 101,
+        rpc_url: "https://alien-burned-energy.solana-mainnet.quiknode.pro/",
+        usdc_address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        explorer_url: "https://explorer.solana.com"
       }
     }.freeze
     
@@ -56,6 +68,18 @@ module X402
         decimals: 6,
         name: "USDC",
         version: "2"
+      },
+      "solana-devnet" => {
+        symbol: "USDC",
+        decimals: 6,
+        name: "USD Coin",
+        version: "1"
+      },
+      "solana" => {
+        symbol: "USDC",
+        decimals: 6,
+        name: "USD Coin",
+        version: "1"
       }
     }.freeze
 
@@ -98,6 +122,14 @@ module X402
 
         # Fall back to default
         chain_config(chain_name)[:rpc_url]
+      end
+
+      def svm_chain?(chain_name)
+        chain_name.start_with?("solana")
+      end
+
+      def evm_chain?(chain_name)
+        !svm_chain?(chain_name)
       end
     end
   end

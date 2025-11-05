@@ -12,6 +12,9 @@ gem "rspec", "~> 3.0"
 
 gem "eth", "~> 0.5.15"
 
+# Solana support via bitzlato's ruby-solana
+gem "solana", git: "https://github.com/bitzlato/ruby-solana"
+
 group :development, :test do
   gem 'simplecov', require: false
   gem 'simplecov-formatter-badge', require: false

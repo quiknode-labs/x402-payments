@@ -22,6 +22,50 @@ module X402
         key = private_key || config.private_key
         recipient = pay_to || config.default_pay_to
 
+        # Route to appropriate chain handler
+        if X402::Payments.svm_chain?(chain_name)
+          generate_solana_header(
+            amount: amount,
+            resource: resource,
+            description: description,
+            chain_name: chain_name,
+            key: key,
+            recipient: recipient,
+            extra: extra
+          )
+        else
+          generate_evm_header(
+            amount: amount,
+            resource: resource,
+            description: description,
+            chain_name: chain_name,
+            key: key,
+            recipient: recipient,
+            extra: extra
+          )
+        end
+      end
+
+      def generate_link(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil)
+        header = generate_header(
+          amount: amount,
+          resource: resource,
+          description: description,
+          network: network,
+          private_key: private_key,
+          pay_to: pay_to,
+          extra: extra
+        )
+
+        {
+          payment_header: header,
+          curl_command: "curl -s -H \"X-PAYMENT: #{header}\" #{resource} | jq ."
+        }
+      end
+
+      private
+
+      def generate_evm_header(amount:, resource:, description:, chain_name:, key:, recipient:, extra:)
         chain_config = X402::Payments.chain_config(chain_name)
         currency_config = X402::Payments.currency_config_for_chain(chain_name)
 
@@ -81,24 +125,43 @@ module X402
         encode_payment(header)
       end
 
-      def generate_link(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil)
-        header = generate_header(
-          amount: amount,
-          resource: resource,
-          description: description,
-          network: network,
-          private_key: private_key,
-          pay_to: pay_to,
-          extra: extra
+      def generate_solana_header(amount:, resource:, description:, chain_name:, key:, recipient:, extra:)
+        chain_config = X402::Payments.chain_config(chain_name)
+        currency_config = X402::Payments.currency_config_for_chain(chain_name)
+
+        # Convert amount to atomic units
+        atomic_amount = convert_to_atomic(amount, currency_config[:decimals])
+
+        # Get fee payer from config or extra
+        fee_payer = config.solana_fee_payer
+
+        # Get RPC URL
+        rpc_url = X402::Payments.rpc_url_for(chain_name)
+
+        # Generate Solana transaction
+        transaction_base64 = X402::Payments::Solana.generate_payment_transaction(
+          private_key: key,
+          pay_to: recipient,
+          amount: atomic_amount,
+          decimals: currency_config[:decimals],
+          token_mint: chain_config[:usdc_address],
+          fee_payer: fee_payer,
+          rpc_url: rpc_url
         )
 
-        {
-          payment_header: header,
-          curl_command: "curl -s -H \"X-PAYMENT: #{header}\" #{resource} | jq ."
+        # Build Solana payment header
+        header = {
+          x402Version: 1,
+          scheme: "exact",
+          network: chain_name,
+          payload: {
+            transaction: transaction_base64
+          }
         }
-      end
 
-      private
+        # Encode to base64
+        encode_payment(header)
+      end
 
       def convert_to_atomic(amount, decimals)
         (amount.to_f * (10**decimals)).to_i

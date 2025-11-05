@@ -57,8 +57,8 @@ RSpec.describe X402::Payments do
   describe ".supported_chains" do
     it "returns list of supported chain names" do
       chains = X402::Payments.supported_chains
-      expect(chains).to include("base-sepolia", "base", "avalanche-fuji", "avalanche")
-      expect(chains.size).to eq(4)
+      expect(chains).to include("base-sepolia", "base", "avalanche-fuji", "avalanche", "solana-devnet", "solana")
+      expect(chains.size).to eq(6)
     end
   end
 

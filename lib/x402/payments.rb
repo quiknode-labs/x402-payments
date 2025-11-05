@@ -3,6 +3,7 @@
 require_relative "payments/version"
 require_relative "payments/configuration"
 require_relative "payments/chains"
+require_relative "payments/solana"
 require_relative "payments/generator"
 
 module X402

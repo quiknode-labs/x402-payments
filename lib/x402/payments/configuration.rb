@@ -3,7 +3,7 @@
 module X402
   module Payments
     class Configuration
-      attr_accessor :default_pay_to, :private_key, :chain, :max_timeout_seconds, :rpc_urls
+      attr_accessor :default_pay_to, :private_key, :chain, :max_timeout_seconds, :rpc_urls, :solana_fee_payer
 
       def initialize
         @default_pay_to = ENV.fetch("X402_PAY_TO", nil)
@@ -11,6 +11,8 @@ module X402
         @chain = ENV.fetch("X402_CHAIN", "base-sepolia")
         @max_timeout_seconds = ENV.fetch("X402_MAX_TIMEOUT_SECONDS", "600").to_i
         @rpc_urls = {}
+        # Default to x402.org facilitator's fee payer for Solana
+        @solana_fee_payer = ENV.fetch("X402_SOLANA_FEE_PAYER", "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5")
       end
 
       def validate!
