@@ -12,5 +12,6 @@
 .rspec_status
 
 .env
+.env.solana
 
 *.gem

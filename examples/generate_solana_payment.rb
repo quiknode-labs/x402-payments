@@ -5,7 +5,7 @@ require "bundler/setup"
 require "x402/payments"
 
 # Load .env file if it exists in the examples directory
-env_file = File.join(__dir__, ".env")
+env_file = File.join(__dir__, ".env.solana")
 if File.exist?(env_file)
   File.readlines(env_file).each do |line|
     line = line.strip
@@ -20,7 +20,7 @@ end
 PRIVATE_KEY = ENV.fetch("X402_PRIVATE_KEY")
 DEFAULT_PAY_TO = ENV.fetch("X402_PAY_TO")
 CHAIN = ENV.fetch("X402_CHAIN", "solana-devnet")
-RESOURCE_URL = "http://localhost:3000/api/weather/paywalled_info"
+RESOURCE_URL = "http://localhost:3000/api/weather/paywalled_info_sol"
 
 # Configure the gem for Solana
 X402::Payments.configure do |config|

@@ -312,7 +312,7 @@ module X402
           #   cd ../js-ata-derivation && npm install && node derive-ata.js <WALLET> <MINT>
 
           # TEMPORARY HARDCODED FIX FOR TESTING
-          # TODO: Replace with proper ATA derivation that works for all addresses
+          # TODO: Replace with proper ATA derivation that works for all addresses here or in the .env.solana file      
           if wallet_address == "EYNQARNg9gZTtj1xMMrHK7dRFAkVjAAMubxaH7Do8d9Y" &&
              token_mint == "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
             return "Cyq5ivewKSEADjRqQijP4rtQjSKP4QV1D77uipnpyjdh"
