@@ -77,6 +77,72 @@ export X402_AVALANCHE_FUJI_RPC_URL="https://your-avax-testnet-rpc.com"
 - `avalanche-fuji` (testnet)
 - `avalanche` (mainnet)
 
+### Custom Chains and Tokens
+
+You can register custom EVM chains and tokens beyond the built-in options.
+
+#### Register a Custom Chain
+
+```ruby
+X402::Payments.configure do |config|
+  config.default_pay_to = ENV['X402_PAY_TO']
+  config.private_key = ENV['X402_PRIVATE_KEY']
+
+  # Register Polygon Amoy testnet
+  config.register_chain(
+    name: "polygon-amoy",
+    chain_id: 80002,
+    standard: "eip155"
+  )
+
+  # Register the token for that chain
+  config.register_token(
+    chain: "polygon-amoy",
+    symbol: "USDC",
+    address: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+    decimals: 6,
+    name: "USD Coin",
+    version: "2"
+  )
+
+  config.chain = "polygon-amoy"
+  config.currency = "USDC"
+end
+```
+
+#### Register a Custom Token on a Built-in Chain
+
+```ruby
+X402::Payments.configure do |config|
+  config.default_pay_to = ENV['X402_PAY_TO']
+  config.private_key = ENV['X402_PRIVATE_KEY']
+
+  # Accept WETH on Base instead of USDC
+  config.register_token(
+    chain: "base",
+    symbol: "WETH",
+    address: "0x4200000000000000000000000000000000000006",
+    decimals: 18,
+    name: "Wrapped Ether",
+    version: "1"
+  )
+
+  config.chain = "base"
+  config.currency = "WETH"
+end
+```
+
+#### Token Registration Parameters
+
+| Parameter  | Required | Description                                     |
+| ---------- | -------- | ----------------------------------------------- |
+| `chain`    | Yes      | Chain name (built-in or custom registered)      |
+| `symbol`   | Yes      | Token symbol (e.g., "USDC", "WETH")             |
+| `address`  | Yes      | Token contract address                          |
+| `decimals` | Yes      | Token decimals (e.g., 6 for USDC, 18 for WETH)  |
+| `name`     | Yes      | Token name for EIP-712 domain                   |
+| `version`  | No       | EIP-712 version (default: "1")                  |
+
 ## Usage
 
 ### Basic Usage

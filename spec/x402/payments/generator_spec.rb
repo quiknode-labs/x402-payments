@@ -245,4 +245,184 @@ RSpec.describe X402::Payments::Generator do
       expect(decoded["payload"]["authorization"]["value"]).to eq("1")
     end
   end
+
+  describe "v2 protocol support" do
+    let(:generator) { described_class.new }
+
+    describe "#generate_header with version: 2" do
+      it "generates a v2 payload structure" do
+        header = generator.generate_header(
+          amount: 0.001,
+          resource: test_resource,
+          description: "Test payment",
+          version: 2
+        )
+
+        decoded = Base64.strict_decode64(header)
+        json = JSON.parse(decoded)
+
+        expect(json["x402Version"]).to eq(2)
+        expect(json["resource"]).to be_a(Hash)
+        expect(json["accepted"]).to be_a(Hash)
+        expect(json["extensions"]).to eq({})
+      end
+
+      it "includes resource object with correct fields" do
+        header = generator.generate_header(
+          amount: 0.001,
+          resource: test_resource,
+          description: "Test payment",
+          version: 2
+        )
+
+        decoded = Base64.strict_decode64(header)
+        json = JSON.parse(decoded)
+
+        expect(json["resource"]["url"]).to eq(test_resource)
+        expect(json["resource"]["description"]).to eq("Test payment")
+        expect(json["resource"]["mimeType"]).to eq("application/json")
+      end
+
+      it "uses CAIP-2 network format in accepted" do
+        header = generator.generate_header(
+          amount: 0.001,
+          resource: test_resource,
+          version: 2
+        )
+
+        decoded = Base64.strict_decode64(header)
+        json = JSON.parse(decoded)
+
+        expect(json["accepted"]["network"]).to eq("eip155:84532")
+      end
+
+      it "includes accepted object with payment requirements" do
+        header = generator.generate_header(
+          amount: 0.001,
+          resource: test_resource,
+          version: 2
+        )
+
+        decoded = Base64.strict_decode64(header)
+        json = JSON.parse(decoded)
+
+        expect(json["accepted"]["scheme"]).to eq("exact")
+        expect(json["accepted"]["amount"]).to eq("1000")
+        expect(json["accepted"]["payTo"]).to eq(test_wallet)
+        expect(json["accepted"]["maxTimeoutSeconds"]).to eq(600)
+      end
+    end
+
+    describe "#generate_link with version: 2" do
+      it "uses PAYMENT-SIGNATURE header name" do
+        link = generator.generate_link(
+          amount: 0.001,
+          resource: test_resource,
+          version: 2
+        )
+
+        expect(link[:header_name]).to eq("PAYMENT-SIGNATURE")
+        expect(link[:curl_command]).to include("PAYMENT-SIGNATURE:")
+      end
+    end
+  end
+
+  describe "#generate_header_for" do
+    let(:generator) { described_class.new }
+
+    let(:v1_payment_required) do
+      {
+        version: 1,
+        resource: {
+          url: test_resource,
+          description: "Test API",
+          mime_type: "application/json"
+        },
+        accepts: [
+          {
+            scheme: "exact",
+            network: "base-sepolia",
+            amount: "1000",
+            asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+            pay_to: test_wallet,
+            max_timeout_seconds: 60,
+            extra: { "name" => "USDC", "version" => "2" }
+          }
+        ]
+      }
+    end
+
+    let(:v2_payment_required) do
+      {
+        version: 2,
+        resource: {
+          url: test_resource,
+          description: "Test API",
+          mime_type: "application/json"
+        },
+        accepts: [
+          {
+            scheme: "exact",
+            network: "eip155:84532",
+            amount: "1000",
+            asset: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+            pay_to: test_wallet,
+            max_timeout_seconds: 60,
+            extra: { "name" => "USDC", "version" => "2" }
+          }
+        ],
+        extensions: {}
+      }
+    end
+
+    it "generates v1 payload for v1 payment requirements" do
+      header = generator.generate_header_for(v1_payment_required)
+
+      decoded = Base64.strict_decode64(header)
+      json = JSON.parse(decoded)
+
+      expect(json["x402Version"]).to eq(1)
+      expect(json["scheme"]).to eq("exact")
+      expect(json["network"]).to eq("base-sepolia")
+    end
+
+    it "generates v2 payload for v2 payment requirements" do
+      header = generator.generate_header_for(v2_payment_required)
+
+      decoded = Base64.strict_decode64(header)
+      json = JSON.parse(decoded)
+
+      expect(json["x402Version"]).to eq(2)
+      expect(json["accepted"]["network"]).to eq("eip155:84532")
+      expect(json["resource"]["url"]).to eq(test_resource)
+    end
+
+    it "raises error when no accepts found" do
+      payment_required = { version: 1, accepts: [] }
+
+      expect {
+        generator.generate_header_for(payment_required)
+      }.to raise_error(X402::Payments::Error, "No payment requirements found")
+    end
+
+    it "allows overriding private_key" do
+      different_key = "0x1234567890123456789012345678901234567890123456789012345678901234"
+
+      header = generator.generate_header_for(v1_payment_required, private_key: different_key)
+      expect(header).to be_a(String)
+    end
+
+    it "uses config private_key by default" do
+      header = generator.generate_header_for(v1_payment_required)
+      expect(header).to be_a(String)
+    end
+
+    it "raises error when private_key is not configured" do
+      X402::Payments.configuration.private_key = nil
+
+      expect {
+        generator.generate_header_for(v1_payment_required)
+      }.to raise_error(X402::Payments::ConfigurationError, "private_key is required")
+    end
+  end
 end

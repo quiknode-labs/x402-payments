@@ -6,24 +6,28 @@ module X402
     CHAINS = {
       "base-sepolia" => {
         chain_id: 84532,
+        caip2: "eip155:84532",
         rpc_url: "https://clean-snowy-hexagon.base-sepolia.quiknode.pro",
         usdc_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         explorer_url: "https://sepolia.basescan.org"
       },
       "base" => {
         chain_id: 8453,
+        caip2: "eip155:8453",
         rpc_url: "https://snowy-compatible-ensemble.base-mainnet.quiknode.pro",
         usdc_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         explorer_url: "https://basescan.org"
       },
       "avalanche-fuji" => {
         chain_id: 43113,
+        caip2: "eip155:43113",
         rpc_url: "https://muddy-sly-field.avalanche-testnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0x5425890298aed601595a70AB815c96711a31Bc65",
         explorer_url: "https://testnet.snowtrace.io"
       },
       "avalanche" => {
         chain_id: 43114,
+        caip2: "eip155:43114",
         rpc_url: "https://floral-patient-panorama.avalanche-mainnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
         explorer_url: "https://snowtrace.io"
@@ -61,7 +65,10 @@ module X402
 
     class << self
       def chain_config(chain_name)
-        CHAINS[chain_name] || raise(ConfigurationError, "Unsupported chain: #{chain_name}")
+        custom = X402::Payments.configuration.chain_config(chain_name)
+        return custom if custom
+
+        CHAINS[chain_name] || raise(ConfigurationError, "Unsupported chain: #{chain_name}. Register with config.register_chain()")
       end
 
       def currency_config_for_chain(chain_name)
@@ -69,19 +76,59 @@ module X402
       end
 
       def supported_chains
-        CHAINS.keys
+        CHAINS.keys + X402::Payments.configuration.custom_chains.keys
       end
 
       def usdc_address_for(chain_name)
-        chain_config(chain_name)[:usdc_address]
+        builtin = CHAINS[chain_name]
+        builtin ? builtin[:usdc_address] : nil
+      end
+
+      def asset_address_for(chain_name, symbol = nil)
+        symbol ||= X402::Payments.configuration.currency
+
+        custom = X402::Payments.configuration.token_config(chain_name, symbol)
+        return custom[:address] if custom
+
+        if symbol.upcase == "USDC"
+          builtin = CHAINS[chain_name]
+          return builtin[:usdc_address] if builtin && builtin[:usdc_address]
+        end
+
+        raise ConfigurationError, "Unknown token #{symbol} for chain #{chain_name}. Register with config.register_token()"
+      end
+
+      def token_config_for(chain_name, symbol = nil)
+        symbol ||= X402::Payments.configuration.currency
+
+        custom = X402::Payments.configuration.token_config(chain_name, symbol)
+        return custom if custom
+
+        if symbol.upcase == "USDC" && CURRENCY_BY_CHAIN[chain_name]
+          currency_config_for_chain(chain_name)
+        else
+          raise ConfigurationError, "Unknown token #{symbol} for chain #{chain_name}. Register with config.register_token()"
+        end
       end
 
       def chain_id_for(chain_name)
+        custom = X402::Payments.configuration.chain_config(chain_name)
+        return custom[:chain_id] if custom
+
         chain_config(chain_name)[:chain_id]
       end
 
       def currency_decimals_for_chain(chain_name)
         currency_config_for_chain(chain_name)[:decimals]
+      end
+
+      def caip2_for(chain_name)
+        custom = X402::Payments.configuration.chain_config(chain_name)
+        if custom
+          return "#{custom[:standard]}:#{custom[:chain_id]}"
+        end
+
+        chain_config(chain_name)[:caip2]
       end
 
       def rpc_url_for(chain_name)
@@ -96,8 +143,9 @@ module X402
         env_rpc = ENV[env_var_name]
         return env_rpc if env_rpc && !env_rpc.empty?
 
-        # Fall back to default
-        chain_config(chain_name)[:rpc_url]
+        # Fall back to default (only for built-in chains)
+        builtin = CHAINS[chain_name]
+        builtin ? builtin[:rpc_url] : nil
       end
     end
   end

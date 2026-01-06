@@ -29,15 +29,53 @@ ruby examples/generate_payment.rb
 # Or set variables inline
 X402_PRIVATE_KEY="0xYourPrivateKey" \
 X402_PAY_TO="0xYourRecipientAddress" \
-X402_CHAIN="base-sepolia" \
 ruby examples/generate_payment.rb
+```
+
+### Command Line Options
+
+```bash
+ruby examples/generate_payment.rb [options]
+
+Options:
+  -v, --version VERSION    Protocol version (1 or 2, default: 1)
+  -c, --chain CHAIN        Chain name (e.g., base-sepolia, polygon-amoy)
+  -h, --help               Show help
+```
+
+### Examples
+
+```bash
+# Use v2 protocol
+ruby examples/generate_payment.rb -v 2
+
+# Use Polygon Amoy testnet (custom chain)
+ruby examples/generate_payment.rb -c polygon-amoy -v 2
+
+# Use Polygon mainnet (custom chain)
+ruby examples/generate_payment.rb -c polygon -v 2
+
+# Use built-in Base Sepolia
+ruby examples/generate_payment.rb -c base-sepolia -v 1
 ```
 
 ### Environment Variables
 
 - `X402_PRIVATE_KEY` - Private key for signing (required)
 - `X402_PAY_TO` - Default recipient wallet address for payments (required)
-- `X402_CHAIN` - Network to use: `base-sepolia`, `base`, `avalanche-fuji`, or `avalanche` (default: `base-sepolia`)
+- `X402_CHAIN` - Network to use (default: `base-sepolia`, can be overridden with `-c`)
+
+### Supported Chains
+
+**Built-in chains:**
+- `base-sepolia` (testnet)
+- `base` (mainnet)
+- `avalanche-fuji` (testnet)
+- `avalanche` (mainnet)
+
+**Custom chains (pre-configured in example):**
+- `polygon-amoy` (Polygon testnet, chain ID: 80002)
+- `polygon` (Polygon mainnet, chain ID: 137)
 
 ### Example Output
 
