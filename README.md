@@ -1,5 +1,7 @@
 # X402::Payments
 
+## Now supporting x402 v2!
+
 ![Coverage](./coverage/coverage.svg)
 
 Ruby gem for generating signed payment HTTP headers and links using the [x402 protocol](https://www.x402.org/).
@@ -143,6 +145,34 @@ end
 | `name`     | Yes      | Token name for EIP-712 domain                   |
 | `version`  | No       | EIP-712 version (default: "1")                  |
 
+## Protocol Versions
+
+x402-payments supports both v1 and v2 of the x402 protocol. **v2 is the default**.
+
+### v2 (Default)
+
+```ruby
+X402::Payments.configure do |config|
+  config.private_key = ENV['X402_PRIVATE_KEY']
+  config.default_pay_to = ENV['X402_PAY_TO']
+  config.protocol_version = 2  # Default, can be omitted
+end
+```
+
+v2 uses CAIP-2 network identifiers (`eip155:84532`) and the `PAYMENT-SIGNATURE` header.
+
+### v1 (Legacy)
+
+```ruby
+X402::Payments.configure do |config|
+  config.private_key = ENV['X402_PRIVATE_KEY']
+  config.default_pay_to = ENV['X402_PAY_TO']
+  config.protocol_version = 1
+end
+```
+
+v1 uses simple network names (`base-sepolia`) and the `X-PAYMENT` header.
+
 ## Usage
 
 ### Basic Usage
@@ -158,8 +188,8 @@ header = X402::Payments.generate_header(
   pay_to: "0xRecipientAddress"                     # Optional: override recipient (defaults to config)
 )
 
-# Use the header in an HTTP request
-# curl -H "X-PAYMENT: #{header}" http://localhost:3000/api/weather
+# Use the header in an HTTP request (v2 uses PAYMENT-SIGNATURE, v1 uses X-PAYMENT)
+# curl -H "PAYMENT-SIGNATURE: #{header}" http://localhost:3000/api/weather
 ```
 
 **Note**: The `pay_to` parameter allows you to specify a different recipient wallet address per payment. If not provided, it uses the configured `default_pay_to`.
@@ -224,14 +254,15 @@ header = X402::Payments.generate_header(
 puts "Payment Header:"
 puts header
 
-HTTParty.get("http://localhost:3000/api/data", headers: { "X-PAYMENT" => header })
+# v2 (default) uses PAYMENT-SIGNATURE, v1 uses X-PAYMENT
+HTTParty.get("http://localhost:3000/api/data", headers: { "PAYMENT-SIGNATURE" => header })
 ```
 
 ## How It Works
 
 1. **Payment Requirements**: The gem creates a payment requirement specifying the amount (in USDC atomic units), network, and resource
 2. **EIP-712 Signing**: Uses EIP-3009 `TransferWithAuthorization` to create a signature that authorizes the payment
-3. **Header Encoding**: Encodes the signed payment data as a base64 string for the `X-PAYMENT` HTTP header
+3. **Header Encoding**: Encodes the signed payment data as a base64 string for the HTTP header (`PAYMENT-SIGNATURE` for v2, `X-PAYMENT` for v1)
 4. **Server Validation**: The server validates the signature and settles the payment on-chain
 
 ## Example Script
