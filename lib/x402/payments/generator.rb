@@ -86,7 +86,7 @@ module X402
 
         resource_info = payment_required[:resource] || {}
         chain_name = resolve_chain_name(accepts[:network])
-        chain_config = X402::Payments.chain_config(chain_name)
+        token_config = X402::Payments.token_config_for(chain_name)
 
         account = Eth::Key.new(priv: key)
         sender_address = account.address.to_s
@@ -107,6 +107,10 @@ module X402
         }
 
         extra_data = accepts[:extra] || {}
+        extra_data = {
+          name: extra_data[:name] || extra_data["name"] || token_config[:name],
+          version: extra_data[:version] || extra_data["version"] || token_config[:version]
+        }
 
         signature = sign_authorization(
           account: account,

@@ -35,7 +35,8 @@ RSpec.describe X402::Payments do
         amount: 0.001,
         resource: "http://localhost:3000/api/test",
         description: "Test",
-        network: "base-sepolia"
+        network: "base-sepolia",
+        version: 1
       )
 
       decoded = JSON.parse(Base64.strict_decode64(header))

@@ -39,7 +39,8 @@ RSpec.describe X402::Payments::Generator do
     it "creates valid JSON in the header" do
       header = generator.generate_header(
         amount: 0.001,
-        resource: test_resource
+        resource: test_resource,
+        version: 1
       )
 
       decoded = Base64.strict_decode64(header)
@@ -111,7 +112,8 @@ RSpec.describe X402::Payments::Generator do
       header = generator.generate_header(
         amount: 0.001,
         resource: test_resource,
-        network: "base"
+        network: "base",
+        version: 1
       )
 
       decoded = Base64.strict_decode64(header)
@@ -198,7 +200,8 @@ RSpec.describe X402::Payments::Generator do
     it "generates a valid curl command" do
       link = generator.generate_link(
         amount: 0.001,
-        resource: test_resource
+        resource: test_resource,
+        version: 1
       )
 
       expect(link[:curl_command]).to include("curl")
@@ -213,7 +216,8 @@ RSpec.describe X402::Payments::Generator do
         amount: 0.005,
         resource: test_resource,
         description: "Test description",
-        network: "base"
+        network: "base",
+        version: 1
       )
 
       decoded = Base64.strict_decode64(link[:payment_header])

@@ -12,7 +12,7 @@ module X402
         @chain = ENV.fetch("X402_CHAIN", "base-sepolia")
         @currency = ENV.fetch("X402_CURRENCY", "USDC")
         @max_timeout_seconds = ENV.fetch("X402_MAX_TIMEOUT_SECONDS", "600").to_i
-        @protocol_version = ENV.fetch("X402_PROTOCOL_VERSION", "1").to_i
+        @protocol_version = ENV.fetch("X402_PROTOCOL_VERSION", "2").to_i
         @rpc_urls = {}
         @custom_chains = {}
         @custom_tokens = {}
