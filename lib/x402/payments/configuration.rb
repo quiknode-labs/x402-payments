@@ -17,8 +17,8 @@ module X402
         @rpc_urls = {}
         @custom_chains = {}
         @custom_tokens = {}
-        @solana_compute_unit_limit = ENV.fetch("X402_SOLANA_COMPUTE_UNIT_LIMIT", "200_000").to_i
-        @solana_compute_unit_price = ENV.fetch("X402_SOLANA_COMPUTE_UNIT_PRICE", "1_000").to_i
+        @solana_compute_unit_limit = ENV.fetch("X402_SOLANA_COMPUTE_UNIT_LIMIT", 200_000).to_i
+        @solana_compute_unit_price = ENV.fetch("X402_SOLANA_COMPUTE_UNIT_PRICE", 1_000).to_i
       end
 
       def register_chain(name:, chain_id:, standard: "eip155")
