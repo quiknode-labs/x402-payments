@@ -86,20 +86,6 @@ RSpec.describe X402::Payments::Networks do
     end
   end
 
-  describe ".normalize" do
-    it "normalizes to human-readable by default" do
-      expect(described_class.normalize("eip155:84532")).to eq("base-sepolia")
-    end
-
-    it "normalizes to CAIP-2 when requested" do
-      expect(described_class.normalize("base-sepolia", format: :caip2)).to eq("eip155:84532")
-    end
-
-    it "raises error for unknown format" do
-      expect { described_class.normalize("base-sepolia", format: :unknown) }.to raise_error(ArgumentError)
-    end
-  end
-
   describe ".chain_id_from_caip2" do
     it "extracts chain ID from CAIP-2 format" do
       expect(described_class.chain_id_from_caip2("eip155:84532")).to eq(84532)

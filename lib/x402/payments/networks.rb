@@ -43,17 +43,6 @@ module X402
           network.to_s.include?(":")
         end
 
-        def normalize(network, format: :human)
-          case format
-          when :human
-            from_caip2(network)
-          when :caip2
-            to_caip2(network)
-          else
-            raise ArgumentError, "Unknown format: #{format}. Use :human or :caip2"
-          end
-        end
-
         def chain_id_from_caip2(caip2_network)
           return nil unless caip2_format?(caip2_network)
 

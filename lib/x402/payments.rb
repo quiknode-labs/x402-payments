@@ -105,19 +105,6 @@ module X402
         end
       end
 
-      def generate_header_for(payment_required, private_key: nil)
-        generator = Generator.new
-        generator.generate_header_for(payment_required, private_key: private_key)
-      end
-
-      def parse_402_response(response)
-        ResponseParser.parse(response)
-      end
-
-      def detect_version(response)
-        ResponseParser.detect_version(response)
-      end
-
       def payment_header_name(version = nil)
         normalized = normalize_version(version) || configuration.protocol_version
         case normalized
@@ -125,26 +112,6 @@ module X402
           V2::Headers::PAYMENT_HEADER
         else
           V1::Headers::PAYMENT_HEADER
-        end
-      end
-
-      def payment_response_header_name(version = nil)
-        normalized = normalize_version(version) || configuration.protocol_version
-        case normalized
-        when 2
-          V2::Headers::PAYMENT_RESPONSE_HEADER
-        else
-          V1::Headers::PAYMENT_RESPONSE_HEADER
-        end
-      end
-
-      def payment_required_header_name(version = nil)
-        normalized = normalize_version(version) || configuration.protocol_version
-        case normalized
-        when 2
-          V2::Headers::PAYMENT_REQUIRED_HEADER
-        else
-          nil
         end
       end
 

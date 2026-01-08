@@ -5,7 +5,6 @@ module X402
     module V1
       module Headers
         PAYMENT_HEADER = "X-PAYMENT"
-        PAYMENT_RESPONSE_HEADER = "X-PAYMENT-RESPONSE"
       end
     end
   end

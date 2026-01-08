@@ -6,7 +6,6 @@ module X402
       module Headers
         PAYMENT_HEADER = "PAYMENT-SIGNATURE"
         PAYMENT_REQUIRED_HEADER = "PAYMENT-REQUIRED"
-        PAYMENT_RESPONSE_HEADER = "PAYMENT-RESPONSE"
       end
     end
   end
