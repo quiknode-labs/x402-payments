@@ -38,7 +38,7 @@ ruby examples/generate_payment.rb
 ruby examples/generate_payment.rb [options]
 
 Options:
-  -v, --version VERSION    Protocol version (1 or 2, default: 1)
+  -v, --version VERSION    Protocol version (1 or 2, default: 2)
   -c, --chain CHAIN        Chain name (e.g., base-sepolia, polygon-amoy)
   -h, --help               Show help
 ```
