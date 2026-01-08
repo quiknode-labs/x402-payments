@@ -4,7 +4,8 @@ module X402
   module Payments
     class Configuration
       attr_accessor :default_pay_to, :private_key, :chain, :max_timeout_seconds, :rpc_urls,
-                    :protocol_version, :custom_chains, :custom_tokens, :currency
+                    :protocol_version, :custom_chains, :custom_tokens, :currency,
+                    :solana_compute_unit_limit, :solana_compute_unit_price
 
       def initialize
         @default_pay_to = ENV.fetch("X402_PAY_TO", nil)
@@ -16,6 +17,8 @@ module X402
         @rpc_urls = {}
         @custom_chains = {}
         @custom_tokens = {}
+        @solana_compute_unit_limit = ENV.fetch("X402_SOLANA_COMPUTE_UNIT_LIMIT", "200_000").to_i
+        @solana_compute_unit_price = ENV.fetch("X402_SOLANA_COMPUTE_UNIT_PRICE", "1_000").to_i
       end
 
       def register_chain(name:, chain_id:, standard: "eip155")

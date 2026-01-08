@@ -20,6 +20,14 @@ RSpec.describe X402::Payments::Networks do
       expect(described_class.to_caip2("avalanche")).to eq("eip155:43114")
     end
 
+    it "converts solana-devnet to CAIP-2 format" do
+      expect(described_class.to_caip2("solana-devnet")).to eq("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1")
+    end
+
+    it "converts solana mainnet to CAIP-2 format" do
+      expect(described_class.to_caip2("solana")).to eq("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")
+    end
+
     it "returns input unchanged if already in CAIP-2 format" do
       expect(described_class.to_caip2("eip155:84532")).to eq("eip155:84532")
     end
@@ -46,6 +54,14 @@ RSpec.describe X402::Payments::Networks do
       expect(described_class.from_caip2("eip155:43114")).to eq("avalanche")
     end
 
+    it "converts CAIP-2 solana-devnet to human-readable" do
+      expect(described_class.from_caip2("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1")).to eq("solana-devnet")
+    end
+
+    it "converts CAIP-2 solana mainnet to human-readable" do
+      expect(described_class.from_caip2("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")).to eq("solana")
+    end
+
     it "returns input unchanged if already in human-readable format" do
       expect(described_class.from_caip2("base-sepolia")).to eq("base-sepolia")
     end
@@ -56,12 +72,17 @@ RSpec.describe X402::Payments::Networks do
   end
 
   describe ".caip2_format?" do
-    it "returns true for CAIP-2 format" do
+    it "returns true for EIP-155 CAIP-2 format" do
       expect(described_class.caip2_format?("eip155:84532")).to be true
+    end
+
+    it "returns true for Solana CAIP-2 format" do
+      expect(described_class.caip2_format?("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1")).to be true
     end
 
     it "returns false for human-readable format" do
       expect(described_class.caip2_format?("base-sepolia")).to be false
+      expect(described_class.caip2_format?("solana-devnet")).to be false
     end
   end
 
@@ -96,12 +117,14 @@ RSpec.describe X402::Payments::Networks do
   describe ".supported_networks" do
     it "returns all supported human-readable network names" do
       expect(described_class.supported_networks).to include("base-sepolia", "base", "avalanche-fuji", "avalanche")
+      expect(described_class.supported_networks).to include("solana-devnet", "solana")
     end
   end
 
   describe ".supported_caip2_networks" do
     it "returns all supported CAIP-2 network identifiers" do
       expect(described_class.supported_caip2_networks).to include("eip155:84532", "eip155:8453", "eip155:43113", "eip155:43114")
+      expect(described_class.supported_caip2_networks).to include("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1", "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")
     end
   end
 

@@ -7,7 +7,9 @@ module X402
         "base-sepolia" => "eip155:84532",
         "base" => "eip155:8453",
         "avalanche-fuji" => "eip155:43113",
-        "avalanche" => "eip155:43114"
+        "avalanche" => "eip155:43114",
+        "solana-devnet" => "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1",
+        "solana" => "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
       }.freeze
 
       CAIP2_MAPPING = NETWORK_MAPPING.invert.freeze

@@ -2,18 +2,33 @@
 
 All notable changes to this project will be documented in this file.
 
-## [0.2.0] - 2025-01-06
+## [1.0.0] - 2026-01-08
 
 ### Added
-- **Protocol v2 support** - Now supports x402 protocol v2 with CAIP-2 network identifiers and `PAYMENT-SIGNATURE` header
-- **Custom chain and token registration** - `config.register_chain()` and `config.register_token()` for custom EVM networks
+- **Solana support** - Full support for Solana payments on `solana-devnet` and `solana` mainnet
+  - SPL Token `TransferChecked` transactions with partial signing
+  - Custom ATA (Associated Token Account) derivation with correct Ed25519 curve checking
+  - Facilitator fee payer model (uses x402.org facilitator by default)
+  - Inline `fee_payer:` override for different facilitators
+  - Configurable compute budget via `X402_SOLANA_COMPUTE_UNIT_LIMIT` and `X402_SOLANA_COMPUTE_UNIT_PRICE`
+- **Protocol v1 and v2 support** - Both protocol versions fully supported
+  - v1: `X-PAYMENT` header, human-readable network names
+  - v2: `PAYMENT-SIGNATURE` header, CAIP-2 network identifiers
+  - Override protocol version per-request with `version:` parameter
+- **Custom EVM chain registration** - `config.register_chain()` for adding custom EVM networks
+- **Custom token registration** - `config.register_token()` for adding tokens beyond USDC
+- **Response parser** - Parse 402 responses from servers
+- **Networks module** - CAIP-2 network identifier conversion
 
 ### Changed
-- Default protocol version is now v2
-- v2 payments use `PAYMENT-SIGNATURE` header (v1 uses `X-PAYMENT`)
-- v2 uses CAIP-2 network format (e.g., `eip155:84532` instead of `base-sepolia`)
+- Default protocol version is v2
+- Solana uses CAIP-2 format: `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1` (devnet)
+- Improved error messages for configuration issues
 
-## [0.1.0] - Previous Release
+### Fixed
+- ATA derivation now uses correct Ed25519 curve equation (fixes `recipient_mismatch` errors)
+
+## [0.1.0] - Initial Release
 
 - Initial release with v1 protocol support
 - EIP-712 signing for USDC payments

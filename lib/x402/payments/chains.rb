@@ -6,34 +6,45 @@ module X402
     CHAINS = {
       "base-sepolia" => {
         chain_id: 84532,
-        caip2: "eip155:84532",
         rpc_url: "https://clean-snowy-hexagon.base-sepolia.quiknode.pro",
         usdc_address: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
         explorer_url: "https://sepolia.basescan.org"
       },
       "base" => {
         chain_id: 8453,
-        caip2: "eip155:8453",
         rpc_url: "https://snowy-compatible-ensemble.base-mainnet.quiknode.pro",
         usdc_address: "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913",
         explorer_url: "https://basescan.org"
       },
       "avalanche-fuji" => {
         chain_id: 43113,
-        caip2: "eip155:43113",
         rpc_url: "https://muddy-sly-field.avalanche-testnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0x5425890298aed601595a70AB815c96711a31Bc65",
         explorer_url: "https://testnet.snowtrace.io"
       },
       "avalanche" => {
         chain_id: 43114,
-        caip2: "eip155:43114",
         rpc_url: "https://floral-patient-panorama.avalanche-mainnet.quiknode.pro/ext/bc/C/rpc",
         usdc_address: "0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E",
         explorer_url: "https://snowtrace.io"
+      },
+      "solana-devnet" => {
+        chain_id: 103,
+        rpc_url: "https://api.devnet.solana.com",
+        usdc_address: "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+        explorer_url: "https://explorer.solana.com/?cluster=devnet",
+        fee_payer: "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5"
+      },
+      "solana" => {
+        chain_id: 101,
+        rpc_url: "https://api.mainnet-beta.solana.com",
+        usdc_address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        explorer_url: "https://explorer.solana.com",
+        fee_payer: "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5"
       }
     }.freeze
-    
+
+    SOLANA_CHAINS = %w[solana solana-devnet].freeze
 
     # Currency configurations by chain
     CURRENCY_BY_CHAIN = {
@@ -60,6 +71,18 @@ module X402
         decimals: 6,
         name: "USDC",
         version: "2"
+      },
+      "solana-devnet" => {
+        symbol: "USDC",
+        decimals: 6,
+        name: "USDC",
+        version: nil
+      },
+      "solana" => {
+        symbol: "USDC",
+        decimals: 6,
+        name: "USD Coin",
+        version: nil
       }
     }.freeze
 
@@ -123,12 +146,7 @@ module X402
       end
 
       def caip2_for(chain_name)
-        custom = X402::Payments.configuration.chain_config(chain_name)
-        if custom
-          return "#{custom[:standard]}:#{custom[:chain_id]}"
-        end
-
-        chain_config(chain_name)[:caip2]
+        Networks.to_caip2(chain_name)
       end
 
       def rpc_url_for(chain_name)
@@ -146,6 +164,20 @@ module X402
         # Fall back to default (only for built-in chains)
         builtin = CHAINS[chain_name]
         builtin ? builtin[:rpc_url] : nil
+      end
+
+      def solana_chain?(chain_name)
+        SOLANA_CHAINS.include?(chain_name)
+      end
+
+      def fee_payer_for(chain_name)
+        return nil unless solana_chain?(chain_name)
+
+        # Priority: 1) ENV variable, 2) Default from CHAINS
+        env_fee_payer = ENV["X402_SOLANA_FEE_PAYER"]
+        return env_fee_payer if env_fee_payer && !env_fee_payer.empty?
+
+        chain_config(chain_name)[:fee_payer]
       end
     end
   end

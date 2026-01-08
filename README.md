@@ -6,7 +6,7 @@
 
 Ruby gem for generating signed payment HTTP headers and links using the [x402 protocol](https://www.x402.org/).
 
-Supports USDC payments on Base, Avalanche, and other EVM networks with EIP-712 signing.
+Supports USDC and other token payments on Base, Avalanche, Solana, and other EVM networks.
 
 ## Installation
 
@@ -74,10 +74,17 @@ export X402_AVALANCHE_FUJI_RPC_URL="https://your-avax-testnet-rpc.com"
 
 ### Supported Networks
 
+**EVM Networks:**
+
 - `base-sepolia` (testnet) - Default
 - `base` (mainnet)
 - `avalanche-fuji` (testnet)
 - `avalanche` (mainnet)
+
+**Solana Networks:**
+
+- `solana-devnet` (testnet)
+- `solana` (mainnet)
 
 ### Custom Chains and Tokens
 
@@ -136,14 +143,38 @@ end
 
 #### Token Registration Parameters
 
-| Parameter  | Required | Description                                     |
-| ---------- | -------- | ----------------------------------------------- |
-| `chain`    | Yes      | Chain name (built-in or custom registered)      |
-| `symbol`   | Yes      | Token symbol (e.g., "USDC", "WETH")             |
-| `address`  | Yes      | Token contract address                          |
-| `decimals` | Yes      | Token decimals (e.g., 6 for USDC, 18 for WETH)  |
-| `name`     | Yes      | Token name for EIP-712 domain                   |
-| `version`  | No       | EIP-712 version (default: "1")                  |
+| Parameter  | Required | Description                                    |
+| ---------- | -------- | ---------------------------------------------- |
+| `chain`    | Yes      | Chain name (built-in or custom registered)     |
+| `symbol`   | Yes      | Token symbol (e.g., "USDC", "WETH")            |
+| `address`  | Yes      | Token contract address                         |
+| `decimals` | Yes      | Token decimals (e.g., 6 for USDC, 18 for WETH) |
+| `name`     | Yes      | Token name for EIP-712 domain                  |
+| `version`  | No       | EIP-712 version (default: "1")                 |
+
+### Solana Configuration
+
+For Solana payments, set these environment variables:
+
+```bash
+export X402_SOL_PRIVATE_KEY="your-base58-private-key"
+export X402_SOL_PAY_TO="YourSolanaWalletAddress"
+export X402_CHAIN="solana-devnet"  # or "solana" for mainnet
+export X402_SOLANA_FEE_PAYER="FacilitatorFeePayer"  # optional, defaults to x402.org facilitator
+```
+
+You can also override the fee payer per-request:
+
+```ruby
+X402::Payments.generate_header(
+  amount: 0.001,
+  resource: "http://example.com/api",
+  network: "solana-devnet",
+  fee_payer: "CustomFacilitatorFeePayer"  # use different facilitator
+)
+```
+
+> **Note**: Both sender and receiver must have a USDC [Associated Token Account (ATA)](https://spl.solana.com/associated-token-account). The sender must have USDC in their wallet (receiving USDC creates the ATA automatically).
 
 ## Protocol Versions
 
@@ -242,13 +273,10 @@ end
 header = X402::Payments.generate_header(
   amount: 0.001,
   resource: "http://localhost:3000/api/data",
+  # version: 1,                              # Override configured protocol version (1 or 2)
   # network: "avalanche",                    # Override default network
-  # private_key: "0xDifferentKey",          # Override default key
-  # pay_to: "0xRecipientWalletAddress",     # Override recipient address
-  # extra: {                                 # Override EIP-712 domain
-  #   name: "Custom Token",
-  #   version: "1"
-  # }
+  # private_key: "0xDifferentKey",           # Override default key
+  # pay_to: "0xRecipientWalletAddress",      # Override recipient address
 )
 
 puts "Payment Header:"
@@ -261,9 +289,11 @@ HTTParty.get("http://localhost:3000/api/data", headers: { "PAYMENT-SIGNATURE" =>
 ## How It Works
 
 1. **Payment Requirements**: The gem creates a payment requirement specifying the amount (in USDC atomic units), network, and resource
-2. **EIP-712 Signing**: Uses EIP-3009 `TransferWithAuthorization` to create a signature that authorizes the payment
+2. **Transaction Signing**:
+   - **EVM**: Uses EIP-3009 `TransferWithAuthorization` to create a signature that authorizes the payment
+   - **Solana**: Creates a partially-signed `TransferChecked` transaction (facilitator adds fee payer signature)
 3. **Header Encoding**: Encodes the signed payment data as a base64 string for the HTTP header (`PAYMENT-SIGNATURE` for v2, `X-PAYMENT` for v1)
-4. **Server Validation**: The server validates the signature and settles the payment on-chain
+4. **Server Validation**: The server validates the signature/transaction and settles the payment on-chain via the [facilitator](https://x402.org/facilitator)
 
 ## Example Script
 

@@ -37,10 +37,18 @@ if File.exist?(env_file)
   end
 end
 
-PRIVATE_KEY = ENV.fetch("X402_PRIVATE_KEY")
-DEFAULT_PAY_TO = ENV.fetch("X402_PAY_TO")
 CHAIN = options[:chain] || ENV.fetch("X402_CHAIN", "base-sepolia")
-RESOURCE_URL = "http://localhost:3000/api/v#{options[:version]}/weather/paywalled_info"
+IS_SOLANA = %w[solana solana-devnet].include?(CHAIN)
+
+if IS_SOLANA
+  PRIVATE_KEY = ENV.fetch("X402_SOL_PRIVATE_KEY")
+  DEFAULT_PAY_TO = ENV.fetch("X402_SOL_PAY_TO")
+  RESOURCE_URL = "http://localhost:3000/api/v#{options[:version]}/weather/paywalled_info_sol"
+else
+  PRIVATE_KEY = ENV.fetch("X402_PRIVATE_KEY")
+  DEFAULT_PAY_TO = ENV.fetch("X402_PAY_TO")
+  RESOURCE_URL = "http://localhost:3000/api/v#{options[:version]}/weather/paywalled_info"
+end
 
 # Custom chain configurations (add more as needed)
 CUSTOM_CHAINS = {
@@ -86,8 +94,9 @@ X402::Payments.configure do |config|
   config.currency = "USDC"
 end
 
+chain_type = IS_SOLANA ? " (Solana)" : (CUSTOM_CHAINS.key?(CHAIN) ? " (custom)" : "")
 puts "=== X402 Payment Generator (V#{version}) ==="
-puts "Chain: #{CHAIN}#{CUSTOM_CHAINS.key?(CHAIN) ? ' (custom)' : ''}"
+puts "Chain: #{CHAIN}#{chain_type}"
 puts "CAIP-2: #{X402::Payments::Networks.to_caip2(CHAIN)}"
 puts "Protocol Version: #{version}"
 puts

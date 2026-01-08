@@ -32,6 +32,20 @@ RSpec.describe X402::Payments do
       expect { X402::Payments.chain_config("unknown") }
         .to raise_error(X402::Payments::ConfigurationError, /Unsupported chain: unknown/)
     end
+
+    it "returns configuration for solana-devnet" do
+      config = X402::Payments.chain_config("solana-devnet")
+      expect(config[:chain_id]).to eq(103)
+      expect(config[:usdc_address]).to eq("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
+      expect(config[:rpc_url]).to eq("https://api.devnet.solana.com")
+      expect(config[:fee_payer]).to eq("CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5")
+    end
+
+    it "returns configuration for solana mainnet" do
+      config = X402::Payments.chain_config("solana")
+      expect(config[:chain_id]).to eq(101)
+      expect(config[:usdc_address]).to eq("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v")
+    end
   end
 
   describe ".currency_config_for_chain" do
@@ -48,9 +62,65 @@ RSpec.describe X402::Payments do
       expect(config[:name]).to eq("USD Coin")
     end
 
+    it "returns currency config for solana-devnet" do
+      config = X402::Payments.currency_config_for_chain("solana-devnet")
+      expect(config[:symbol]).to eq("USDC")
+      expect(config[:decimals]).to eq(6)
+      expect(config[:version]).to be_nil
+    end
+
+    it "returns currency config for solana mainnet" do
+      config = X402::Payments.currency_config_for_chain("solana")
+      expect(config[:symbol]).to eq("USDC")
+      expect(config[:name]).to eq("USD Coin")
+    end
+
     it "raises error for unsupported chain" do
       expect { X402::Payments.currency_config_for_chain("unknown") }
         .to raise_error(X402::Payments::ConfigurationError, "Unsupported chain for currency: unknown")
+    end
+  end
+
+  describe ".solana_chain?" do
+    it "returns true for solana-devnet" do
+      expect(X402::Payments.solana_chain?("solana-devnet")).to be true
+    end
+
+    it "returns true for solana mainnet" do
+      expect(X402::Payments.solana_chain?("solana")).to be true
+    end
+
+    it "returns false for EVM chains" do
+      expect(X402::Payments.solana_chain?("base-sepolia")).to be false
+      expect(X402::Payments.solana_chain?("base")).to be false
+      expect(X402::Payments.solana_chain?("avalanche")).to be false
+    end
+  end
+
+  describe ".fee_payer_for" do
+    before { X402::Payments.reset_configuration! }
+
+    it "returns fee payer for solana-devnet" do
+      fee_payer = X402::Payments.fee_payer_for("solana-devnet")
+      expect(fee_payer).to eq("CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5")
+    end
+
+    it "returns fee payer for solana mainnet" do
+      fee_payer = X402::Payments.fee_payer_for("solana")
+      expect(fee_payer).to eq("CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5")
+    end
+
+    it "returns nil for non-Solana chains" do
+      expect(X402::Payments.fee_payer_for("base-sepolia")).to be_nil
+      expect(X402::Payments.fee_payer_for("base")).to be_nil
+    end
+
+    it "respects X402_SOLANA_FEE_PAYER env var" do
+      allow(ENV).to receive(:[]).and_call_original
+      allow(ENV).to receive(:[]).with("X402_SOLANA_FEE_PAYER").and_return("CustomFeePayer123")
+
+      fee_payer = X402::Payments.fee_payer_for("solana-devnet")
+      expect(fee_payer).to eq("CustomFeePayer123")
     end
   end
 
@@ -60,6 +130,7 @@ RSpec.describe X402::Payments do
     it "returns list of supported chain names" do
       chains = X402::Payments.supported_chains
       expect(chains).to include("base-sepolia", "base", "avalanche-fuji", "avalanche")
+      expect(chains).to include("solana-devnet", "solana")
     end
 
     it "includes custom chains" do
@@ -96,9 +167,14 @@ RSpec.describe X402::Payments do
   describe ".caip2_for" do
     before { X402::Payments.reset_configuration! }
 
-    it "returns CAIP-2 for built-in chains" do
+    it "returns CAIP-2 for built-in EVM chains" do
       expect(X402::Payments.caip2_for("base-sepolia")).to eq("eip155:84532")
       expect(X402::Payments.caip2_for("base")).to eq("eip155:8453")
+    end
+
+    it "returns CAIP-2 for Solana chains" do
+      expect(X402::Payments.caip2_for("solana-devnet")).to eq("solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1")
+      expect(X402::Payments.caip2_for("solana")).to eq("solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp")
     end
 
     it "returns CAIP-2 for custom chains" do
