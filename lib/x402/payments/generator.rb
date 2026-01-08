@@ -18,7 +18,7 @@ module X402
       def generate_header(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil, version: nil)
         config.validate!
 
-        protocol_version = version || config.protocol_version
+        protocol_version = X402::Payments.normalize_version(version) || config.protocol_version
         chain_name = network || config.chain
         key = private_key || config.private_key
         recipient = pay_to || config.default_pay_to
@@ -80,7 +80,7 @@ module X402
         key = private_key || config.private_key
         raise ConfigurationError, "private_key is required" if key.nil? || key.empty?
 
-        version = payment_required[:version] || 1
+        version = X402::Payments.normalize_version(payment_required[:version]) || 1
         accepts = payment_required[:accepts]&.first
         raise Error, "No payment requirements found" unless accepts
 
@@ -155,7 +155,7 @@ module X402
       end
 
       def generate_link(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil, version: nil)
-        protocol_version = version || config.protocol_version
+        protocol_version = X402::Payments.normalize_version(version) || config.protocol_version
         header = generate_header(
           amount: amount,
           resource: resource,

@@ -54,23 +54,29 @@ gem install x402-payments
 
 ## Configuration
 
-The gem uses environment variables for configuration with sensible defaults:
+Configure the gem using environment variables. See `examples/.env.example` for a template.
 
-```bash
-# Required
-export X402_PAY_TO="0xYourWalletAddress"          # Default address to receive payments
-export X402_PRIVATE_KEY="0xYourPrivateKey"        # Private key for signing
+### Environment Variables
 
-# Optional (with defaults shown)
-export X402_CHAIN="base-sepolia"                  # Network to use
-export X402_MAX_TIMEOUT_SECONDS="600"             # Payment validity timeout
-
-# Optional: Custom RPC URLs (override default RPC endpoints)
-export X402_BASE_RPC_URL="https://your-custom-rpc.com"
-export X402_BASE_SEPOLIA_RPC_URL="https://your-sepolia-rpc.com"
-export X402_AVALANCHE_RPC_URL="https://your-avax-rpc.com"
-export X402_AVALANCHE_FUJI_RPC_URL="https://your-avax-testnet-rpc.com"
-```
+| Variable                         | Required     | Description                                      |
+| -------------------------------- | ------------ | ------------------------------------------------ |
+| `X402_PRIVATE_KEY`               | Yes (EVM)    | EVM private key for signing                      |
+| `X402_PAY_TO`                    | Yes (EVM)    | EVM recipient wallet address                     |
+| `X402_SOL_PRIVATE_KEY`           | Yes (Solana) | Solana private key (base58 or JSON array)        |
+| `X402_SOL_PAY_TO`                | Yes (Solana) | Solana recipient wallet address                  |
+| `X402_CHAIN`                     | No           | Network to use (default: `base-sepolia`)         |
+| `X402_CURRENCY`                  | No           | Token symbol (default: `USDC`)                   |
+| `X402_PROTOCOL_VERSION`          | No           | Protocol version 1 or 2 (default: `2`)           |
+| `X402_MAX_TIMEOUT_SECONDS`       | No           | Payment validity timeout (default: `600`)        |
+| `X402_SOLANA_FEE_PAYER`          | No           | Solana fee payer (default: x402.org facilitator) |
+| `X402_SOLANA_COMPUTE_UNIT_LIMIT` | No           | Solana compute unit limit (default: `200000`)    |
+| `X402_SOLANA_COMPUTE_UNIT_PRICE` | No           | Priority fee in micro-lamports (default: `1000`) |
+| `X402_SOLANA_RPC_URL`            | No           | Custom Solana mainnet RPC URL                    |
+| `X402_SOLANA_DEVNET_RPC_URL`     | No           | Custom Solana devnet RPC URL                     |
+| `X402_BASE_RPC_URL`              | No           | Custom Base mainnet RPC URL                      |
+| `X402_BASE_SEPOLIA_RPC_URL`      | No           | Custom Base Sepolia RPC URL                      |
+| `X402_AVALANCHE_RPC_URL`         | No           | Custom Avalanche mainnet RPC URL                 |
+| `X402_AVALANCHE_FUJI_RPC_URL`    | No           | Custom Avalanche Fuji RPC URL                    |
 
 ### Supported Networks
 
@@ -114,9 +120,18 @@ X402::Payments.configure do |config|
     version: "2"
   )
 
+  # Set the RPC URL for the custom chain
+  config.rpc_urls["polygon-amoy"] = "https://rpc-amoy.polygon.technology"
+
   config.chain = "polygon-amoy"
   config.currency = "USDC"
 end
+```
+
+You can also set RPC URLs via environment variables using the pattern `X402_<CHAIN>_RPC_URL`:
+
+```bash
+export X402_POLYGON_AMOY_RPC_URL="https://rpc-amoy.polygon.technology"
 ```
 
 #### Register a Custom Token on a Built-in Chain
@@ -154,13 +169,10 @@ end
 
 ### Solana Configuration
 
-For Solana payments, set these environment variables:
+For Solana payments, ensure you've set the Solana-specific environment variables (see Configuration section above), then set your chain:
 
 ```bash
-export X402_SOL_PRIVATE_KEY="your-base58-private-key"
-export X402_SOL_PAY_TO="YourSolanaWalletAddress"
 export X402_CHAIN="solana-devnet"  # or "solana" for mainnet
-export X402_SOLANA_FEE_PAYER="FacilitatorFeePayer"  # optional, defaults to x402.org facilitator
 ```
 
 You can also override the fee payer per-request:

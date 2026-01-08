@@ -5,7 +5,7 @@ require "bundler/setup"
 require "optparse"
 require "x402/payments"
 
-options = { version: 2, chain: nil }
+options = { version: ENV.fetch("X402_PROTOCOL_VERSION", "2").to_i, chain: nil }
 
 OptionParser.new do |opts|
   opts.banner = "Usage: ruby generate_payment.rb [options]"

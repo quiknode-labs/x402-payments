@@ -37,7 +37,7 @@ RSpec.describe X402::Payments do
       config = X402::Payments.chain_config("solana-devnet")
       expect(config[:chain_id]).to eq(103)
       expect(config[:usdc_address]).to eq("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU")
-      expect(config[:rpc_url]).to eq("https://api.devnet.solana.com")
+      expect(config[:rpc_url]).to eq("https://bitter-twilight-vineyard.solana-devnet.quiknode.pro")
       expect(config[:fee_payer]).to eq("CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5")
     end
 

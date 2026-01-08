@@ -20,9 +20,24 @@ require_relative "payments/solana/generator"
 
 module X402
   module Payments
+    SUPPORTED_VERSIONS = [1, 2].freeze
 
     class << self
+      # Normalize version parameter to integer and validate
+      # @param version [Integer, String, nil] the version to normalize
+      # @return [Integer, nil] normalized version or nil if input was nil
+      # @raise [ArgumentError] if version is not a supported value
+      def normalize_version(version)
+        return nil if version.nil?
+
+        normalized = version.to_i
+        unless SUPPORTED_VERSIONS.include?(normalized)
+          raise ArgumentError, "Unsupported protocol version: #{version.inspect}. Supported versions: #{SUPPORTED_VERSIONS.join(', ')}"
+        end
+        normalized
+      end
       def generate_header(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil, version: nil, fee_payer: nil)
+        normalized_version = normalize_version(version)
         chain_name = network || configuration.chain
 
         if solana_chain?(chain_name)
@@ -34,7 +49,7 @@ module X402
             network: network,
             private_key: private_key,
             pay_to: pay_to,
-            version: version,
+            version: normalized_version,
             fee_payer: fee_payer
           )
         else
@@ -47,14 +62,15 @@ module X402
             private_key: private_key,
             pay_to: pay_to,
             extra: extra,
-            version: version
+            version: normalized_version
           )
         end
       end
 
       def generate_link(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil, version: nil, fee_payer: nil)
+        normalized_version = normalize_version(version)
         chain_name = network || configuration.chain
-        protocol_version = version || configuration.protocol_version
+        protocol_version = normalized_version || configuration.protocol_version
         header_name = payment_header_name(protocol_version)
 
         if solana_chain?(chain_name)
@@ -103,8 +119,8 @@ module X402
       end
 
       def payment_header_name(version = nil)
-        version ||= configuration.protocol_version
-        case version
+        normalized = normalize_version(version) || configuration.protocol_version
+        case normalized
         when 2
           V2::Headers::PAYMENT_HEADER
         else
@@ -113,8 +129,8 @@ module X402
       end
 
       def payment_response_header_name(version = nil)
-        version ||= configuration.protocol_version
-        case version
+        normalized = normalize_version(version) || configuration.protocol_version
+        case normalized
         when 2
           V2::Headers::PAYMENT_RESPONSE_HEADER
         else
@@ -123,8 +139,8 @@ module X402
       end
 
       def payment_required_header_name(version = nil)
-        version ||= configuration.protocol_version
-        case version
+        normalized = normalize_version(version) || configuration.protocol_version
+        case normalized
         when 2
           V2::Headers::PAYMENT_REQUIRED_HEADER
         else

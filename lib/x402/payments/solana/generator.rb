@@ -28,7 +28,7 @@ module X402
           facilitator_fee_payer = fee_payer || X402::Payments.fee_payer_for(chain_name)
           raise ConfigurationError, "Facilitator fee payer is required for Solana" if facilitator_fee_payer.nil? || facilitator_fee_payer.empty?
 
-          protocol_version = version || config.protocol_version
+          protocol_version = X402::Payments.normalize_version(version) || config.protocol_version
           token_config = X402::Payments.token_config_for(chain_name)
           mint_address = X402::Payments.usdc_address_for(chain_name)
           decimals = token_config[:decimals]
