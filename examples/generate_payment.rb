@@ -55,14 +55,9 @@ CUSTOM_CHAINS = {
   "polygon-amoy" => {
     chain_id: 80002,
     usdc_address: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
-    usdc_name: "USDC",
-    usdc_version: "2"
-  },
-  "polygon" => {
-    chain_id: 137,
-    usdc_address: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
-    usdc_name: "USD Coin",
-    usdc_version: "2"
+    usdc_name: "USDC", # Token name for EIP-712 domain (must match contract's name())
+    usdc_version: "2",
+    rpc_url: "https://bitter-attentive-pool.matic-amoy.quiknode.pro"
   }
 }.freeze
 
@@ -88,6 +83,7 @@ X402::Payments.configure do |config|
       name: custom[:usdc_name],
       version: custom[:usdc_version]
     )
+    config.rpc_urls[CHAIN] = custom[:rpc_url] # Register the RPC URL for the custom chain
   end
 
   config.chain = CHAIN

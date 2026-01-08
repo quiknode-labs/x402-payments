@@ -6,7 +6,7 @@
 
 Ruby gem for generating signed payment HTTP headers and links using the [x402 protocol](https://www.x402.org/).
 
-Supports USDC and other token payments on Base, Avalanche, Solana, and other EVM networks.
+Supports USDC and other token payments on Base, Avalanche, Solana, and other EVM networks with EIP-712 signing.
 
 ## Installation
 
@@ -121,7 +121,7 @@ X402::Payments.configure do |config|
   )
 
   # Set the RPC URL for the custom chain
-  config.rpc_urls["polygon-amoy"] = "https://rpc-amoy.polygon.technology"
+  config.rpc_urls["polygon-amoy"] = "https://bitter-attentive-pool.matic-amoy.quiknode.pro"
 
   config.chain = "polygon-amoy"
   config.currency = "USDC"
@@ -131,7 +131,7 @@ end
 You can also set RPC URLs via environment variables using the pattern `X402_<CHAIN>_RPC_URL`:
 
 ```bash
-export X402_POLYGON_AMOY_RPC_URL="https://rpc-amoy.polygon.technology"
+export X402_POLYGON_AMOY_RPC_URL="https://bitter-attentive-pool.matic-amoy.quiknode.pro"
 ```
 
 #### Register a Custom Token on a Built-in Chain

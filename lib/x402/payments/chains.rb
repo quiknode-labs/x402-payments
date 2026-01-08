@@ -37,7 +37,7 @@ module X402
       },
       "solana" => {
         chain_id: 101,
-        rpc_url: "https://alien-burned-energy.solana-mainnet.quiknode.pro/",
+        rpc_url: "https://alien-burned-energy.solana-mainnet.quiknode.pro",
         usdc_address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
         explorer_url: "https://explorer.solana.com",
         fee_payer: "CKPKJWNdJEqa81x7CkZ14BVPiY6y16Sxs7owznqtWYp5"
