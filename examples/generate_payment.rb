@@ -2,7 +2,29 @@
 # frozen_string_literal: true
 
 require "bundler/setup"
+require "optparse"
 require "x402/payments"
+
+options = { version: ENV.fetch("X402_PROTOCOL_VERSION", "2").to_i, chain: nil }
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: ruby generate_payment.rb [options]"
+
+  opts.on("-v", "--version VERSION", Integer, "Protocol version (1 or 2)") do |v|
+    options[:version] = v
+  end
+
+  opts.on("-c", "--chain CHAIN", "Chain name (e.g., base-sepolia, polygon-amoy)") do |c|
+    options[:chain] = c
+  end
+
+  opts.on("-h", "--help", "Show this help") do
+    puts opts
+    exit
+  end
+end.parse!
+
+version = options[:version]
 
 # Load .env file if it exists in the examples directory
 env_file = File.join(__dir__, ".env")
@@ -15,42 +37,80 @@ if File.exist?(env_file)
   end
 end
 
-# Configuration
-# NOTE: Replace these with your actual credentials via environment variables
-PRIVATE_KEY = ENV.fetch("X402_PRIVATE_KEY")
-DEFAULT_PAY_TO = ENV.fetch("X402_PAY_TO")
-CHAIN = ENV.fetch("X402_CHAIN", "base-sepolia")
-RESOURCE_URL = "http://localhost:3000/api/weather/paywalled_info"
+CHAIN = options[:chain] || ENV.fetch("X402_CHAIN", "base-sepolia")
+IS_SOLANA = %w[solana solana-devnet].include?(CHAIN)
 
-# Configure the gem
+if IS_SOLANA
+  PRIVATE_KEY = ENV.fetch("X402_SOL_PRIVATE_KEY")
+  DEFAULT_PAY_TO = ENV.fetch("X402_SOL_PAY_TO")
+  RESOURCE_URL = "http://localhost:3000/api/v#{options[:version]}/weather/paywalled_info_sol"
+else
+  PRIVATE_KEY = ENV.fetch("X402_PRIVATE_KEY")
+  DEFAULT_PAY_TO = ENV.fetch("X402_PAY_TO")
+  RESOURCE_URL = "http://localhost:3000/api/v#{options[:version]}/weather/paywalled_info"
+end
+
+# Custom chain configurations (add more as needed)
+CUSTOM_CHAINS = {
+  "polygon-amoy" => {
+    chain_id: 80002,
+    usdc_address: "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582",
+    usdc_name: "USDC", # Token name for EIP-712 domain (must match contract's name())
+    usdc_version: "2",
+    rpc_url: "https://bitter-attentive-pool.matic-amoy.quiknode.pro"
+  }
+}.freeze
+
 X402::Payments.configure do |config|
   config.default_pay_to = DEFAULT_PAY_TO
   config.private_key = PRIVATE_KEY
-  config.chain = CHAIN
   config.max_timeout_seconds = 600
+  config.protocol_version = version
+
+  # Register custom chain if needed
+  if CUSTOM_CHAINS.key?(CHAIN)
+    custom = CUSTOM_CHAINS[CHAIN]
+    config.register_chain(
+      name: CHAIN,
+      chain_id: custom[:chain_id],
+      standard: "eip155"
+    )
+    config.register_token(
+      chain: CHAIN,
+      symbol: "USDC",
+      address: custom[:usdc_address],
+      decimals: 6,
+      name: custom[:usdc_name],
+      version: custom[:usdc_version]
+    )
+    config.rpc_urls[CHAIN] = custom[:rpc_url] # Register the RPC URL for the custom chain
+  end
+
+  config.chain = CHAIN
+  config.currency = "USDC"
 end
 
-puts "=== X402 Payment Generator ==="
-puts "Default Pay To: #{DEFAULT_PAY_TO}"
-puts "Chain: #{CHAIN}"
-
-# Generate payment for a resource
-amount = 0.001  # $0.001 USD
-
-puts "Generating payment for:"
-puts "  Resource: #{RESOURCE_URL}"
-puts "  Amount: $#{amount} USD"
+chain_type = IS_SOLANA ? " (Solana)" : (CUSTOM_CHAINS.key?(CHAIN) ? " (custom)" : "")
+puts "=== X402 Payment Generator (V#{version}) ==="
+puts "Chain: #{CHAIN}#{chain_type}"
+puts "CAIP-2: #{X402::Payments::Networks.to_caip2(CHAIN)}"
+puts "Protocol Version: #{version}"
 puts
 
-# Generate the payment link with curl command
+amount = 0.001
+
 link = X402::Payments.generate_link(
   amount: amount,
   resource: RESOURCE_URL,
-  description: "Payment required for #{RESOURCE_URL}",
-  # pay_to: "0xDifferentRecipientAddress"  # Optional: override recipient
+  description: "Payment for weather API"
 )
 
-puts "Payment Header (X-PAYMENT):"
+puts "Resource: #{RESOURCE_URL}"
+puts "Amount: $#{amount} USD"
+puts
+puts "Header Name: #{link[:header_name]}"
+puts
+puts "Payment Header:"
 puts link[:payment_header]
 puts
 puts "Curl Command:"

@@ -15,73 +15,147 @@ module X402
         @config = config
       end
 
-      def generate_header(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil)
+      def generate_header(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil, version: nil)
         config.validate!
 
+        protocol_version = X402::Payments.normalize_version(version) || config.protocol_version
         chain_name = network || config.chain
         key = private_key || config.private_key
         recipient = pay_to || config.default_pay_to
 
-        chain_config = X402::Payments.chain_config(chain_name)
-        currency_config = X402::Payments.currency_config_for_chain(chain_name)
+        token_config = X402::Payments.token_config_for(chain_name)
+        asset_address = X402::Payments.asset_address_for(chain_name)
 
-        # Convert amount to atomic units
-        atomic_amount = convert_to_atomic(amount, currency_config[:decimals])
+        atomic_amount = convert_to_atomic(amount, token_config[:decimals])
 
-        # Get the Ethereum account from private key
         account = Eth::Key.new(priv: key)
         sender_address = account.address.to_s
 
-        # Create nonce (32 random bytes)
-        nonce = SecureRandom.random_bytes(32)
+        nonce_bytes = SecureRandom.random_bytes(32)
+        nonce_hex = "0x#{nonce_bytes.unpack1('H*')}"
 
-        # Build payment requirements
-        payment_requirements = {
-          scheme: "exact",
-          network: chain_name,
-          max_amount_required: atomic_amount.to_s,
-          asset: chain_config[:usdc_address],
-          pay_to: recipient,
-          resource: resource,
-          description: description || "Payment required for #{resource}",
-          max_timeout_seconds: config.max_timeout_seconds,
-          mime_type: "application/json",
-          extra: extra || {
-            name: currency_config[:name],
-            version: currency_config[:version]
-          }
-        }
-
-        # Prepare unsigned payment header
         valid_after = (Time.now.to_i - 60).to_s
         valid_before = (Time.now.to_i + config.max_timeout_seconds).to_s
 
-        header = {
-          x402Version: 1,
-          scheme: "exact",
-          network: chain_name,
-          payload: {
-            signature: nil,
-            authorization: {
-              from: sender_address,
-              to: recipient,
-              value: atomic_amount.to_s,
-              validAfter: valid_after,
-              validBefore: valid_before,
-              nonce: "0x#{nonce.unpack1('H*')}"
-            }
-          }
+        authorization = {
+          from: sender_address,
+          to: recipient,
+          value: atomic_amount.to_s,
+          valid_after: valid_after,
+          valid_before: valid_before,
+          nonce: nonce_hex
         }
 
-        # Sign the payment header
-        signature = sign_payment(account, header, payment_requirements, nonce)
-        header[:payload][:signature] = signature
+        extra_data = extra || {
+          name: token_config[:name],
+          version: token_config[:version]
+        }
 
-        # Encode to base64
-        encode_payment(header)
+        signature = sign_authorization(
+          account: account,
+          authorization: authorization,
+          chain_name: chain_name,
+          asset: asset_address,
+          extra: extra_data,
+          nonce_bytes: nonce_bytes
+        )
+
+        payload = build_payload(
+          version: protocol_version,
+          authorization: authorization,
+          signature: signature,
+          resource: resource,
+          description: description,
+          chain_name: chain_name,
+          asset_address: asset_address,
+          atomic_amount: atomic_amount,
+          recipient: recipient,
+          extra: extra_data
+        )
+
+        encode_payment(payload)
       end
 
-      def generate_link(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil)
+      def generate_header_for(payment_required, private_key: nil)
+        key = private_key || config.private_key
+        raise ConfigurationError, "private_key is required" if key.nil? || key.empty?
+
+        version = X402::Payments.normalize_version(payment_required[:version]) || 1
+        accepts = payment_required[:accepts]&.first
+        raise Error, "No payment requirements found" unless accepts
+
+        resource_info = payment_required[:resource] || {}
+        chain_name = resolve_chain_name(accepts[:network])
+        token_config = X402::Payments.token_config_for(chain_name)
+
+        account = Eth::Key.new(priv: key)
+        sender_address = account.address.to_s
+
+        nonce_bytes = SecureRandom.random_bytes(32)
+        nonce_hex = "0x#{nonce_bytes.unpack1('H*')}"
+
+        valid_after = (Time.now.to_i - 60).to_s
+        valid_before = (Time.now.to_i + (accepts[:max_timeout_seconds] || config.max_timeout_seconds)).to_s
+
+        authorization = {
+          from: sender_address,
+          to: accepts[:pay_to],
+          value: accepts[:amount],
+          valid_after: valid_after,
+          valid_before: valid_before,
+          nonce: nonce_hex
+        }
+
+        extra_data = accepts[:extra] || {}
+        extra_data = {
+          name: extra_data[:name] || extra_data["name"] || token_config[:name],
+          version: extra_data[:version] || extra_data["version"] || token_config[:version]
+        }
+
+        signature = sign_authorization(
+          account: account,
+          authorization: authorization,
+          chain_name: chain_name,
+          asset: accepts[:asset],
+          extra: extra_data,
+          nonce_bytes: nonce_bytes
+        )
+
+        payload = case version
+                  when 2
+                    V2::PayloadBuilder.build(
+                      authorization: authorization,
+                      signature: signature,
+                      resource: {
+                        url: resource_info[:url],
+                        description: resource_info[:description],
+                        mime_type: resource_info[:mime_type]
+                      },
+                      accepted: {
+                        scheme: accepts[:scheme],
+                        network: accepts[:network],
+                        amount: accepts[:amount],
+                        asset: accepts[:asset],
+                        pay_to: accepts[:pay_to],
+                        max_timeout_seconds: accepts[:max_timeout_seconds],
+                        extra: extra_data
+                      },
+                      extensions: payment_required[:extensions] || {}
+                    )
+                  else
+                    V1::PayloadBuilder.build(
+                      authorization: authorization,
+                      signature: signature,
+                      scheme: accepts[:scheme],
+                      network: chain_name
+                    )
+                  end
+
+        encode_payment(payload)
+      end
+
+      def generate_link(amount:, resource:, description: nil, network: nil, private_key: nil, pay_to: nil, extra: nil, version: nil)
+        protocol_version = X402::Payments.normalize_version(version) || config.protocol_version
         header = generate_header(
           amount: amount,
           resource: resource,
@@ -89,28 +163,34 @@ module X402
           network: network,
           private_key: private_key,
           pay_to: pay_to,
-          extra: extra
+          extra: extra,
+          version: protocol_version
         )
+
+        header_name = X402::Payments.payment_header_name(protocol_version)
 
         {
           payment_header: header,
-          curl_command: "curl -s -H \"X-PAYMENT: #{header}\" #{resource} | jq ."
+          header_name: header_name,
+          curl_command: "curl -s -H \"#{header_name}: #{header}\" #{resource} | jq ."
         }
       end
 
       private
 
-      def convert_to_atomic(amount, decimals)
-        (amount.to_f * (10**decimals)).to_i
+      def resolve_chain_name(network)
+        if Networks.caip2_format?(network)
+          Networks.from_caip2(network)
+        else
+          network
+        end
       end
 
-      def sign_payment(account, header, payment_requirements, nonce_bytes)
-        auth = header[:payload][:authorization]
-        extra = payment_requirements[:extra]
-        chain_name = payment_requirements[:network]
-        asset = payment_requirements[:asset]
+      def convert_to_atomic(amount, decimals)
+        (amount.to_f * (10**decimals)).round
+      end
 
-        # Build EIP-712 typed data
+      def sign_authorization(account:, authorization:, chain_name:, asset:, extra:, nonce_bytes:)
         typed_data = {
           types: {
             EIP712Domain: [
@@ -130,27 +210,55 @@ module X402
           },
           primaryType: "TransferWithAuthorization",
           domain: {
-            name: extra[:name],
-            version: extra[:version],
+            name: extra[:name] || extra["name"],
+            version: extra[:version] || extra["version"],
             chainId: X402::Payments.chain_id_for(chain_name),
             verifyingContract: asset
           },
           message: {
-            from: auth[:from],
-            to: auth[:to],
-            value: auth[:value].to_i,
-            validAfter: auth[:validAfter].to_i,
-            validBefore: auth[:validBefore].to_i,
+            from: authorization[:from],
+            to: authorization[:to],
+            value: authorization[:value].to_i,
+            validAfter: authorization[:valid_after].to_i,
+            validBefore: authorization[:valid_before].to_i,
             nonce: nonce_bytes
           }
         }
 
-        # Sign using eth gem
         signature = account.sign_typed_data(typed_data)
-
-        # Ensure signature has 0x prefix
         signature = "0x#{signature}" unless signature.start_with?("0x")
         signature
+      end
+
+      def build_payload(version:, authorization:, signature:, resource:, description:, chain_name:, asset_address:, atomic_amount:, recipient:, extra:)
+        case version
+        when 2
+          V2::PayloadBuilder.build(
+            authorization: authorization,
+            signature: signature,
+            resource: {
+              url: resource,
+              description: description || "Payment required for #{resource}",
+              mime_type: "application/json"
+            },
+            accepted: {
+              scheme: "exact",
+              network: Networks.to_caip2(chain_name),
+              amount: atomic_amount.to_s,
+              asset: asset_address,
+              pay_to: recipient,
+              max_timeout_seconds: config.max_timeout_seconds,
+              extra: extra
+            }
+          )
+        else
+          V1::PayloadBuilder.build(
+            authorization: authorization,
+            signature: signature,
+            scheme: "exact",
+            network: chain_name
+          )
+        end
       end
 
       def encode_payment(payment_payload)

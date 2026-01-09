@@ -139,4 +139,68 @@ RSpec.describe X402::Payments do
       expect(X402::Payments.configuration.private_key).to be_nil
     end
   end
+
+  describe "#register_chain" do
+    it "registers a custom EVM chain" do
+      X402::Payments.configure do |config|
+        config.register_chain(name: "polygon", chain_id: 137)
+      end
+
+      chain = X402::Payments.configuration.chain_config("polygon")
+      expect(chain[:chain_id]).to eq(137)
+      expect(chain[:standard]).to eq("eip155")
+    end
+
+    it "allows specifying standard" do
+      X402::Payments.configure do |config|
+        config.register_chain(name: "polygon", chain_id: 137, standard: "eip155")
+      end
+
+      chain = X402::Payments.configuration.chain_config("polygon")
+      expect(chain[:standard]).to eq("eip155")
+    end
+
+    it "raises error for non-EVM standard" do
+      expect {
+        X402::Payments.configuration.register_chain(name: "custom", chain_id: 999, standard: "solana")
+      }.to raise_error(X402::Payments::ConfigurationError, /Only eip155/)
+    end
+  end
+
+  describe "#register_token" do
+    it "registers a custom token" do
+      X402::Payments.configure do |config|
+        config.register_token(
+          chain: "base",
+          symbol: "WETH",
+          address: "0x4200000000000000000000000000000000000006",
+          decimals: 18,
+          name: "Wrapped Ether",
+          version: "1"
+        )
+      end
+
+      token = X402::Payments.configuration.token_config("base", "WETH")
+      expect(token[:symbol]).to eq("WETH")
+      expect(token[:address]).to eq("0x4200000000000000000000000000000000000006")
+      expect(token[:decimals]).to eq(18)
+      expect(token[:name]).to eq("Wrapped Ether")
+      expect(token[:version]).to eq("1")
+    end
+
+    it "uses default version of 1" do
+      X402::Payments.configure do |config|
+        config.register_token(
+          chain: "base",
+          symbol: "WETH",
+          address: "0x4200000000000000000000000000000000000006",
+          decimals: 18,
+          name: "Wrapped Ether"
+        )
+      end
+
+      token = X402::Payments.configuration.token_config("base", "WETH")
+      expect(token[:version]).to eq("1")
+    end
+  end
 end

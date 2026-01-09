@@ -1,19 +1,38 @@
 PATH
   remote: .
   specs:
-    x402-payments (0.1.0)
+    x402-payments (1.0.0)
       base64
       eth (~> 0.5.11)
       ostruct
+      solana-ruby-web3js (~> 2.1)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    base64 (0.3.0)
+    activesupport (8.1.1)
+      base64
+      bigdecimal
+      concurrent-ruby (~> 1.0, >= 1.3.1)
+      connection_pool (>= 2.2.5)
+      drb
+      i18n (>= 1.6, < 2)
+      json
+      logger (>= 1.4.2)
+      minitest (>= 5.1)
+      securerandom (>= 0.3)
+      tzinfo (~> 2.0, >= 2.0.5)
+      uri (>= 0.13.1)
+    base58 (0.2.3)
+    base64 (0.2.0)
     bigdecimal (3.3.1)
+    concurrent-ruby (1.3.6)
+    connection_pool (3.0.2)
     date (3.5.0)
     diff-lcs (1.6.2)
     docile (1.4.1)
+    drb (2.2.3)
+    ed25519 (1.4.0)
     erb (5.1.3)
     eth (0.5.15)
       bigdecimal (~> 3.1)
@@ -23,30 +42,40 @@ GEM
       openssl (~> 3.3)
       rbsecp256k1 (~> 6.0)
       scrypt (~> 3.0)
+    event_emitter (0.2.6)
     ffi (1.17.2)
     ffi (1.17.2-arm64-darwin)
     ffi-compiler (1.3.2)
       ffi (>= 1.15.5)
       rake
     forwardable (1.3.3)
+    i18n (1.14.8)
+      concurrent-ruby (~> 1.0)
     io-console (0.8.1)
     irb (1.15.2)
       pp (>= 0.6.0)
       rdoc (>= 4.0.0)
       reline (>= 0.4.2)
+    json (2.18.0)
     keccak (1.3.2)
     konstructor (1.0.2)
+    logger (1.7.0)
     mini_portile2 (2.8.9)
+    minitest (6.0.1)
+      prism (~> 1.5)
     openssl (3.3.2)
     ostruct (0.6.3)
     pkg-config (1.6.4)
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
+    prism (1.7.0)
     psych (5.2.6)
       date
       stringio
     rake (13.3.1)
+    rbnacl (7.1.2)
+      ffi (~> 1)
     rbsecp256k1 (6.0.0)
       mini_portile2 (~> 2.8)
       pkg-config (~> 1.5)
@@ -74,6 +103,7 @@ GEM
     scrypt (3.1.0)
       ffi-compiler (>= 1.0, < 2.0)
       rake (~> 13)
+    securerandom (0.4.1)
     simplecov (0.22.0)
       docile (~> 1.1)
       simplecov-html (~> 0.11)
@@ -81,8 +111,22 @@ GEM
     simplecov-formatter-badge (0.1.1)
     simplecov-html (0.13.2)
     simplecov_json_formatter (0.1.4)
+    solana-ruby-web3js (2.1.5)
+      activesupport
+      base58 (~> 0.2.3)
+      base64 (~> 0.2.0)
+      ed25519
+      rbnacl (~> 7.1)
+      websocket-client-simple (~> 0.8.0)
     stringio (3.1.7)
     tsort (0.2.0)
+    tzinfo (2.0.6)
+      concurrent-ruby (~> 1.0)
+    uri (1.1.1)
+    websocket (1.2.11)
+    websocket-client-simple (0.8.0)
+      event_emitter
+      websocket
 
 PLATFORMS
   arm64-darwin

@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.authors = ["QuickNode"]
   spec.email = ["zach+402@quiknode.io"]
 
-  spec.summary = "Generate x402 payment signatures and links for blockchain micropayments"
-  spec.description = "Ruby gem for generating signed payment headers and links using the x402 protocol. Supports USDC payments on Base and other EVM networks with EIP-712 signing."
+  spec.summary = "Generate x402 payment signatures and links for blockchain micropayments with Solana and EVM chains. (supports x402 v2)"
+  spec.description = "Ruby gem for generating signed payment headers and links using the x402 protocol with Solana and EVM chains. (supports x402 v2)"
   spec.homepage = "https://github.com/quiknode-labs/x402-payments"
   spec.license = "MIT"
   spec.required_ruby_version = ">= 3.0.0"
@@ -32,6 +32,9 @@ Gem::Specification.new do |spec|
 
   # Dependencies for EIP-712 signing and Ethereum interactions
   spec.add_dependency "eth", "~> 0.5.11"
+
+  # Dependencies for Solana SPL token transfers
+  spec.add_dependency "solana-ruby-web3js", "~> 2.1"
 
   # Ruby 3.4+ compatibility
   spec.add_dependency "base64"
