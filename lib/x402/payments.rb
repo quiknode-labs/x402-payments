@@ -14,7 +14,6 @@ require_relative "payments/v1/headers"
 require_relative "payments/v1/payload_builder"
 require_relative "payments/v2/headers"
 require_relative "payments/v2/payload_builder"
-require_relative "payments/response_parser"
 require_relative "payments/generator"
 require_relative "payments/solana/generator"
 

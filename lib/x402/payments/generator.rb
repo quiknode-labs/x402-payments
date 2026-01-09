@@ -187,7 +187,7 @@ module X402
       end
 
       def convert_to_atomic(amount, decimals)
-        (amount.to_f * (10**decimals)).to_i
+        (amount.to_f * (10**decimals)).round
       end
 
       def sign_authorization(account:, authorization:, chain_name:, asset:, extra:, nonce_bytes:)

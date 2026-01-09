@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [1.0.0] - 2026-01-08
 
 ### Added
+
 - **Solana support** - Full support for Solana payments on `solana-devnet` and `solana` mainnet
   - SPL Token `TransferChecked` transactions with partial signing
   - Custom ATA (Associated Token Account) derivation with correct Ed25519 curve checking
@@ -17,15 +18,16 @@ All notable changes to this project will be documented in this file.
   - Override protocol version per-request with `version:` parameter
 - **Custom EVM chain registration** - `config.register_chain()` for adding custom EVM networks
 - **Custom token registration** - `config.register_token()` for adding tokens beyond USDC
-- **Response parser** - Parse 402 responses from servers
 - **Networks module** - CAIP-2 network identifier conversion
 
 ### Changed
+
 - Default protocol version is v2
 - Solana uses CAIP-2 format: `solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1` (devnet)
 - Improved error messages for configuration issues
 
 ### Fixed
+
 - ATA derivation now uses correct Ed25519 curve equation (fixes `recipient_mismatch` errors)
 
 ## [0.1.0] - Initial Release

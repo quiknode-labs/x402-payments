@@ -30,7 +30,7 @@ module X402
 
           protocol_version = X402::Payments.normalize_version(version) || config.protocol_version
           token_config = X402::Payments.token_config_for(chain_name)
-          mint_address = X402::Payments.usdc_address_for(chain_name)
+          mint_address = X402::Payments.asset_address_for(chain_name)
           decimals = token_config[:decimals]
 
           atomic_amount = convert_to_atomic(amount, decimals)
@@ -76,7 +76,7 @@ module X402
         private
 
         def convert_to_atomic(amount, decimals)
-          (amount.to_f * (10**decimals)).to_i
+          (amount.to_f * (10**decimals)).round
         end
 
         def load_keypair(private_key_input)
